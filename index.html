@@ -95,6 +95,7 @@ class Mesh{
         [0,1,0],
         [0,0,1]
     ];
+
     vertices = [
        //front
        {x:-1, y:1, z:1},
@@ -108,109 +109,42 @@ class Mesh{
         {x:1, y:1, z:-1}
    ];
 
-   projVertices = [
-       //front
-       {x:-1, y:1, z:1},
-        {x:-1, y:-1, z:1},
-        {x:1, y:-1, z:1},
-        {x:1, y:1, z:1},
-        //back
-        {x:-1, y:1, z:-1},
-        {x:-1, y:-1, z:-1},
-        {x:1, y:-1, z:-1},
-        {x:1, y:1, z:-1}
-   ];
+   projVertices = [];
 
    getTriangles() {
         let  triangles = [
             //front
             [this.projVertices[0], this.projVertices[1], this.projVertices[2]],
             [this.projVertices[0], this.projVertices[2], this.projVertices[3]],
-            // [{x:-1, y:1, z:1}, {x:-1, y:-1, z:1}, {x:1, y:-1, z:1}],
-            // [{x: -1, y:1, z:1}, {x:1, y:-1, z:1}, {x:1, y:1, z:1}],
 
             //back
-            [{x: -1, y:1, z:-1}, {x:-1, y:-1, z:-1}, {x:1, y:-1, z:-1}],
-            [{x: -1, y:1, z:-1}, {x:1, y:-1, z:-1}, {x:1, y:1, z:-1}],
+            [this.projVertices[7], this.projVertices[6], this.projVertices[5]],
+            [this.projVertices[7], this.projVertices[5], this.projVertices[4]],
             
             //right
-            [{x:1, y:1, z:1}, {x:1, y:-1, z:1}, {x:1, y:-1, z:-1}],
-            [{x:1, y:1, z:1}, {x:1, y:-1, z:-1}, {x:1, y:1, z:-1}],
-
+            [this.projVertices[3], this.projVertices[2], this.projVertices[6]],
+            [this.projVertices[3], this.projVertices[6], this.projVertices[7]],
+            
             //left
-            [{x:-1, y:1, z:1}, {x:-1, y:-1, z:1}, {x:-1, y:-1, z:-1}],
-            [{x:-1, y:1, z:1}, {x:-1, y:-1, z:-1}, {x:-1, y:1, z:-1}],
+            [this.projVertices[4], this.projVertices[5], this.projVertices[1]],
+            [this.projVertices[4], this.projVertices[1], this.projVertices[0]],
 
             //top
-            [{x:-1, y:-1, z:1}, {x:-1, y:-1, z:-1}, {x:1, y:-1, z:-1}],
-            [{x:-1, y:-1, z:1}, {x:1, y:-1, z:-1}, {x:1, y:-1, z:1}],
+            [this.projVertices[1], this.projVertices[5], this.projVertices[6]],
+            [this.projVertices[1], this.projVertices[6], this.projVertices[2]],
 
             //bottom
-            [{x:-1, y:1, z:1}, {x:-1, y:1, z:-1}, {x:1, y:1, z:-1}],
-            [{x:-1, y:1, z:1}, {x:1, y:1, z:-1}, {x:1, y:1, z:1}]
+            [this.projVertices[0], this.projVertices[4], this.projVertices[7]],
+            [this.projVertices[0], this.projVertices[7], this.projVertices[3]],
         ];
 
         return triangles;
-    }   
-}
-   var meshCube = new Mesh();//{};
-   
-//    meshCube.matrix = [
-//         [1,0,0],
-//         [0,1,0],
-//         [0,0,1]
-//     ]
-
-//    meshCube.vertices = [
-//        //front
-//        {x:-1, y:1, z:1},
-//         {x:-1, y:-1, z:1},
-//         {x:1, y:-1, z:1},
-//         {x:1, y:1, z:1},
-//         //back
-//         {x:-1, y:1, z:-1},
-//         {x:-1, y:-1, z:-1},
-//         {x:1, y:-1, z:-1},
-//         {x:1, y:1, z:-1}
-//    ];
-   
-//    meshCube.getTriangles = function(vertices = []) {
-//         let  triangles = [
-//             //front
-//             // [meshCube.vertices[0], meshCube.vertices[1], meshCube.vertices[2]],
-//             // [meshCube.vertices[0], meshCube.vertices[2], meshCube.vertices[3]],
-//             [{x:-1, y:1, z:1}, {x:-1, y:-1, z:1}, {x:1, y:-1, z:1}],
-//             [{x: -1, y:1, z:1}, {x:1, y:-1, z:1}, {x:1, y:1, z:1}],
-
-//             //back
-//             [{x: -1, y:1, z:-1}, {x:-1, y:-1, z:-1}, {x:1, y:-1, z:-1}],
-//             [{x: -1, y:1, z:-1}, {x:1, y:-1, z:-1}, {x:1, y:1, z:-1}],
-            
-//             //right
-//             [{x:1, y:1, z:1}, {x:1, y:-1, z:1}, {x:1, y:-1, z:-1}],
-//             [{x:1, y:1, z:1}, {x:1, y:-1, z:-1}, {x:1, y:1, z:-1}],
-
-//             //left
-//             [{x:-1, y:1, z:1}, {x:-1, y:-1, z:1}, {x:-1, y:-1, z:-1}],
-//             [{x:-1, y:1, z:1}, {x:-1, y:-1, z:-1}, {x:-1, y:1, z:-1}],
-
-//             //top
-//             [{x:-1, y:-1, z:1}, {x:-1, y:-1, z:-1}, {x:1, y:-1, z:-1}],
-//             [{x:-1, y:-1, z:1}, {x:1, y:-1, z:-1}, {x:1, y:-1, z:1}],
-
-//             //bottom
-//             [{x:-1, y:1, z:1}, {x:-1, y:1, z:-1}, {x:1, y:1, z:-1}],
-//             [{x:-1, y:1, z:1}, {x:1, y:1, z:-1}, {x:1, y:1, z:1}]
-//         ];
-
-//         return triangles;
-//     }   
-
-   function drawMesh(mesh, scale = 100)
-   {
-        for (let i = 0; i < mesh.vertices.length; i++) {
+    }
+    
+    drawMesh(scale = 100) {
+        for (let i = 0; i < this.vertices.length; i++) {
             strokeWeight(16);
-            let p = MatrixVectorMultiply(mesh.matrix, mesh.vertices[i]);
+            let p = MatrixVectorMultiply(this.matrix, this.vertices[i]);
             let dist = 1.0/(3.0-p.z);
             let perspProjMatrix = [
                 [dist, 0, 0],
@@ -220,14 +154,14 @@ class Mesh{
             p = MatrixVectorMultiply(perspProjMatrix, p);
             p = VectorScale(p, scale);
             // pProj = MatrixVectorMultiply(orthographicProjectionMatrix, p);
-            strokeWeight(dist*20);
+            strokeWeight(dist*10);
             point(p.x, p.y);
-            mesh.projVertices[i] = p;
+            this.projVertices[i] = p;
         }
 
-        for (let t = 0; t < mesh.getTriangles().length; t++) {
+        for (let t = 0; t < this.getTriangles().length; t++) {
             strokeWeight(2);
-            let triPoints = mesh.getTriangles()[t];
+            let triPoints = this.getTriangles()[t];
             let p1 = triPoints[0];
             let p2 = triPoints[1];
             let p3 = triPoints[2];
@@ -236,6 +170,9 @@ class Mesh{
             line(p3.x, p3.y, 0,      p1.x, p1.y, 0);
         }
    }
+}
+   var meshCube = new Mesh();
+
      // Returns a Rotation Matrix about the X axis (in radians)
     // | 1,   0,      0     |
     // | 0, Cos(T), -Sin(T) |
@@ -359,7 +296,7 @@ class Mesh{
     }
 
     angle = (Math.PI/4) * 0.01;
-    
+    z
     function draw() {
         background(0);
         rectMode(CENTER);
@@ -379,8 +316,8 @@ class Mesh{
         
 
         strokeWeight(16);
-        meshCube.matrix = Multiply(meshCube.matrix, YPR(angle, angle, angle));
-        drawMesh(meshCube, 100);
+        meshCube.matrix = Multiply(meshCube.matrix, YPR(0, angle, 0));
+        meshCube.drawMesh(100);
 
         // for (let i = 0; i < points.length; i++) {
         //     let pt = MatrixVectorMultiply(rotation, points[i]);
