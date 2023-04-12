@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.js"></script>-->
+    <script src="jquery-3.6.4.min.js"></script>
+    <script src="p5.min.js"></script>
+        <title>IMU</title>
+    <style>
+        body {
+            background-color: #1b1a1a;
+            color: rgb(213, 212, 212);
+            text-align: center;
+            margin:auto;
+            padding: auto;
+        }
+        h1 {
+            text-align: center;
+            padding: 20px;
+        }
+        canvas {
+            min-width: 340px;
+            min-height: 340px;
+            max-width: 640px;
+            max-height: 640px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Inertial Measurement Unit</h1>
+    <script src="sketch.js"></script>
+</body>
+<script>
+    //-----------GRAPHICS---------------
+    let imu = {
+        rotX: 0,
+        rotY: 0,
+        rotZ: 0,
+    
+        i: {x: 0, y: 0, z: -1},
+        j: {x: 1, y: 0, z: 0},
+        k: {x: 0, y: 1, z: 0},
+
+        posX: 0,
+        posY: 0,
+        posZ: 0
+    };
+
+    var forward = {x:0, y:0, z:-1};
+    var back = {x:0, y:0, z:1};
+    var right = {x:1, y:0, z:0};
+    var left = {x:-1, y:0, z:0};
+    var up = {x:0, y:-1, z:0};
+    var down = {x:0, y:1, z:0};
+    
+    // var rotation = [
+    //     [0, 0, -1],
+    //     [1, 0, 0],
+    //     [0, 1, 0]
+    // ]
+
+    rotation = [
+        [1,0,0],
+        [0,1,0],
+        [0,0,1]
+    ]
+
+    var orthographicProjectionMatrix = [
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]
+    ]
+
+    var cube = [
+        //front
+        {x:-1, y:1, z:1},
+        {x:-1, y:-1, z:1},
+        {x:1, y:-1, z:1},
+        {x:1, y:1, z:1},
+        //back
+        {x:-1, y:1, z:-1},
+        {x:-1, y:-1, z:-1},
+        {x:1, y:-1, z:-1},
+        {x:1, y:1, z:-1}
+    ];
+
+   var points = cube;
+
+class Mesh{
+    matrix = [
+        [1,0,0],
+        [0,1,0],
+        [0,0,1]
+    ];
+    vertices = [
+       //front
+       {x:-1, y:1, z:1},
+        {x:-1, y:-1, z:1},
+        {x:1, y:-1, z:1},
+        {x:1, y:1, z:1},
+        //back
+        {x:-1, y:1, z:-1},
+        {x:-1, y:-1, z:-1},
+        {x:1, y:-1, z:-1},
+        {x:1, y:1, z:-1}
+   ];
+
+   projVertices = [
+       //front
+       {x:-1, y:1, z:1},
+        {x:-1, y:-1, z:1},
+        {x:1, y:-1, z:1},
+        {x:1, y:1, z:1},
+        //back
+        {x:-1, y:1, z:-1},
+        {x:-1, y:-1, z:-1},
+        {x:1, y:-1, z:-1},
+        {x:1, y:1, z:-1}
+   ];
+
+   getTriangles() {
+        let  triangles = [
+            //front
+            [this.projVertices[0], this.projVertices[1], this.projVertices[2]],
+            [this.projVertices[0], this.projVertices[2], this.projVertices[3]],
+            // [{x:-1, y:1, z:1}, {x:-1, y:-1, z:1}, {x:1, y:-1, z:1}],
+            // [{x: -1, y:1, z:1}, {x:1, y:-1, z:1}, {x:1, y:1, z:1}],
+
+            //back
+            [{x: -1, y:1, z:-1}, {x:-1, y:-1, z:-1}, {x:1, y:-1, z:-1}],
+            [{x: -1, y:1, z:-1}, {x:1, y:-1, z:-1}, {x:1, y:1, z:-1}],
+            
+            //right
+            [{x:1, y:1, z:1}, {x:1, y:-1, z:1}, {x:1, y:-1, z:-1}],
+            [{x:1, y:1, z:1}, {x:1, y:-1, z:-1}, {x:1, y:1, z:-1}],
+
+            //left
+            [{x:-1, y:1, z:1}, {x:-1, y:-1, z:1}, {x:-1, y:-1, z:-1}],
+            [{x:-1, y:1, z:1}, {x:-1, y:-1, z:-1}, {x:-1, y:1, z:-1}],
+
+            //top
+            [{x:-1, y:-1, z:1}, {x:-1, y:-1, z:-1}, {x:1, y:-1, z:-1}],
+            [{x:-1, y:-1, z:1}, {x:1, y:-1, z:-1}, {x:1, y:-1, z:1}],
+
+            //bottom
+            [{x:-1, y:1, z:1}, {x:-1, y:1, z:-1}, {x:1, y:1, z:-1}],
+            [{x:-1, y:1, z:1}, {x:1, y:1, z:-1}, {x:1, y:1, z:1}]
+        ];
+
+        return triangles;
+    }   
+}
+   var meshCube = new Mesh();//{};
+   
+//    meshCube.matrix = [
+//         [1,0,0],
+//         [0,1,0],
+//         [0,0,1]
+//     ]
+
+//    meshCube.vertices = [
+//        //front
+//        {x:-1, y:1, z:1},
+//         {x:-1, y:-1, z:1},
+//         {x:1, y:-1, z:1},
+//         {x:1, y:1, z:1},
+//         //back
+//         {x:-1, y:1, z:-1},
+//         {x:-1, y:-1, z:-1},
+//         {x:1, y:-1, z:-1},
+//         {x:1, y:1, z:-1}
+//    ];
+   
+//    meshCube.getTriangles = function(vertices = []) {
+//         let  triangles = [
+//             //front
+//             // [meshCube.vertices[0], meshCube.vertices[1], meshCube.vertices[2]],
+//             // [meshCube.vertices[0], meshCube.vertices[2], meshCube.vertices[3]],
+//             [{x:-1, y:1, z:1}, {x:-1, y:-1, z:1}, {x:1, y:-1, z:1}],
+//             [{x: -1, y:1, z:1}, {x:1, y:-1, z:1}, {x:1, y:1, z:1}],
+
+//             //back
+//             [{x: -1, y:1, z:-1}, {x:-1, y:-1, z:-1}, {x:1, y:-1, z:-1}],
+//             [{x: -1, y:1, z:-1}, {x:1, y:-1, z:-1}, {x:1, y:1, z:-1}],
+            
+//             //right
+//             [{x:1, y:1, z:1}, {x:1, y:-1, z:1}, {x:1, y:-1, z:-1}],
+//             [{x:1, y:1, z:1}, {x:1, y:-1, z:-1}, {x:1, y:1, z:-1}],
+
+//             //left
+//             [{x:-1, y:1, z:1}, {x:-1, y:-1, z:1}, {x:-1, y:-1, z:-1}],
+//             [{x:-1, y:1, z:1}, {x:-1, y:-1, z:-1}, {x:-1, y:1, z:-1}],
+
+//             //top
+//             [{x:-1, y:-1, z:1}, {x:-1, y:-1, z:-1}, {x:1, y:-1, z:-1}],
+//             [{x:-1, y:-1, z:1}, {x:1, y:-1, z:-1}, {x:1, y:-1, z:1}],
+
+//             //bottom
+//             [{x:-1, y:1, z:1}, {x:-1, y:1, z:-1}, {x:1, y:1, z:-1}],
+//             [{x:-1, y:1, z:1}, {x:1, y:1, z:-1}, {x:1, y:1, z:1}]
+//         ];
+
+//         return triangles;
+//     }   
+
+   function drawMesh(mesh, scale = 100)
+   {
+        for (let i = 0; i < mesh.vertices.length; i++) {
+            strokeWeight(16);
+            let p = MatrixVectorMultiply(mesh.matrix, mesh.vertices[i]);
+            let dist = 1.0/(3.0-p.z);
+            let perspProjMatrix = [
+                [dist, 0, 0],
+                [0, dist, 0],
+                [0, 0, 0]
+            ];
+            p = MatrixVectorMultiply(perspProjMatrix, p);
+            p = VectorScale(p, scale);
+            // pProj = MatrixVectorMultiply(orthographicProjectionMatrix, p);
+            strokeWeight(dist*20);
+            point(p.x, p.y);
+            mesh.projVertices[i] = p;
+        }
+
+        for (let t = 0; t < mesh.getTriangles().length; t++) {
+            strokeWeight(2);
+            let triPoints = mesh.getTriangles()[t];
+            let p1 = triPoints[0];
+            let p2 = triPoints[1];
+            let p3 = triPoints[2];
+            line(p1.x, p1.y, 0,      p2.x, p2.y, 0);
+            line(p2.x, p2.y, 0,      p3.x, p3.y, 0);
+            line(p3.x, p3.y, 0,      p1.x, p1.y, 0);
+        }
+   }
+     // Returns a Rotation Matrix about the X axis (in radians)
+    // | 1,   0,      0     |
+    // | 0, Cos(T), -Sin(T) |
+    // | 0, Sin(T),  Cos(T) |
+    function RotX(theta) 
+    {
+        Cos = cos(theta);
+        Sin = sin(theta);
+
+        let matrix = [
+            [1, 0, 0],     
+            [0, Cos, -Sin],  
+            [0, Sin, Cos]
+        ];
+
+        return matrix;
+    }
+
+    // Returns a Rotation Matrix about the Y axis (in radians)
+    // | Cos(T),  0,   Sin(T)  |
+    // |   0,     1,     0     |
+    // |-Sin(T),  0,   Cos(T)  |
+    function RotY(theta) 
+    {
+        Cos = cos(theta);
+        Sin = sin(theta);
+
+        let matrix = [
+            [Cos, 0, Sin],     
+            [0,   1,  0 ],  
+            [-Sin,0, Cos]
+        ];
+
+        return matrix;
+    }
+
+    // Returns a Rotation Matrix about the Z axis (in radians)
+    // | Cos(T), -Sin(T), 0 |
+    // | Sin(T),  Cos(T), 0 |
+    // |   0,      0,     1 |
+    function RotZ(theta) 
+    {
+        let Cos = cos(theta);
+        let Sin = sin(theta);
+
+        let matrix = [
+            [Cos, -Sin,  0],     
+            [Sin,  Cos,  0],  
+            [0,     0,   1]
+        ];
+
+        return matrix;
+    }
+
+    function VectorScale(vector, scaler)
+    {
+        let vec = {};
+        vec.x = vector.x * scaler;
+        vec.y = vector.y * scaler;
+        vec.z = vector.z * scaler;
+
+        return vec;
+    }
+
+    function VectorSum(Vec1, vec2) {
+        let vectorSum = {x: (vec1.x + vec2.x), y: (vec1.y + vec2.y), z: (vec1.z + vec2.z)};
+        return vectorSum;
+    }
+
+    function DotProduct(vecA, vecB)
+    {
+        return (vecA.x * vecB.x) + (vecA.y * vecB.y) + (vecA.z * vecB.z);
+    }
+
+    function Multiply(matrixA, matrixB)
+    {
+        let result = [[0,0,0], [0,0,0], [0,0,0]];
+        for (var r = 0; r < 3; r++)
+        {
+            let rowVec = {x: matrixA[r][0], y: matrixA[r][1], z: matrixA[r][2] };
+            for (var c = 0; c < 3; c++)
+            {
+                let columnVec = {x: matrixB[0][c], y: matrixB[1][c], z: matrixB[2][c] };
+                result[r][c] = DotProduct(rowVec, columnVec);
+            }
+        }
+
+        return result;
+    }
+
+    function MatrixVectorMultiply(matrix, columnVector) {
+        result = [0,0,0];
+        for (var r = 0; r < 3; r++)
+        {
+            let rowVec = {x: matrix[r][0], y: matrix[r][1], z: matrix[r][2] };
+            result[r] = DotProduct(rowVec, columnVector);
+        }
+
+        return {x:result[0], y:result[1], z:result[2]};
+    }
+    
+
+    // Yaw-Pitch-Roll z-y'-x''(intrinsic rotation) or x-y-z (extrinsic rotation)
+    function YPR(roll, pitch, yaw)
+    {
+        let rotationMatrix = Multiply(Multiply(RotZ(yaw), RotY(pitch)), RotX(roll));//Multiply(rotation.matrix, RotZ(PI/2.0).matrix);
+        return rotationMatrix;
+    }
+
+    let min = 340;
+    let max = 640;
+    let screenWidth = screen.width - 30;
+    if (screen.width < min) {
+        screenWidth = min;
+    } else if (screenWidth > max) {
+        screenWidth = max;
+    }
+
+    function setup() {
+        createCanvas(screenWidth, screenWidth, WEBGL);
+    }
+
+    angle = (Math.PI/4) * 0.01;
+    
+    function draw() {
+        background(0);
+        rectMode(CENTER);
+        //angleMode(DEGREES);
+       // angle = mouseX*0.01;
+        //radius = screenWidth/3;//(screen.width <= 700) ? screen.width/4 : 800/4;
+        stroke(255);
+        // line(0, 0, 0, imu.i.x * radius, imu.i.y * radius, imu.i.z * radius);
+        // line(0, 0, 0, imu.j.x * radius, imu.j.y * radius, imu.j.z * radius);
+        // line(0, 0, 0, imu.k.x * radius, imu.k.y * radius, imu.k.z * radius);
+        
+        // stroke(255);
+        // point(imu.i.x * radius, imu.i.y * radius, imu.i.z * radius);
+        // point(imu.j.x * radius, imu.j.y * radius, imu.j.z * radius);
+        // point(imu.k.x * radius, imu.k.y * radius, imu.k.z * radius);
+        
+        
+
+        strokeWeight(16);
+        meshCube.matrix = Multiply(meshCube.matrix, YPR(angle, angle, angle));
+        drawMesh(meshCube, 100);
+
+        // for (let i = 0; i < points.length; i++) {
+        //     let pt = MatrixVectorMultiply(rotation, points[i]);
+        //     let dist = 1.0/(3-pt.z);
+        //     let perspProjMatrix = [
+        //         [dist, 0, 0],
+        //         [0, dist, 0],
+        //         [0, 0, 0]
+        //     ];
+        //     pt = VectorScale(pt, 100);
+        //     pt = MatrixVectorMultiply(perspProjMatrix, pt);
+        //     strokeWeight(dist*20);
+        //     point(pt.x, pt.y);
+        // }
+        
+        // for (let i = 0; i < meshCube.vertices.length; i++) {
+        //     let pt = MatrixVectorMultiply(rotation, meshCube.vertices[i]);
+        //     let dist = 1.0/(3-pt.z);
+        //     let perspProjMatrix = [
+        //         [dist, 0, 0],
+        //         [0, dist, 0],
+        //         [0, 0, 0]
+        //     ];
+        //     pt = VectorScale(pt, 100);
+        //     pt = MatrixVectorMultiply(perspProjMatrix, pt);
+        //     strokeWeight(dist*20);
+        //     point(pt.x, pt.y);
+
+        // }
+
+        
+
+        
+        
+        // point(rotation[0][0] * radius, rotation[0][1] * radius, rotation[0][2] * radius);
+        // point(rotation[1][0] * radius, rotation[1][1] * radius, rotation[1][2] * radius);
+        // point(rotation[2][0] * radius, rotation[2][1] * radius, rotation[2][2] * radius);
+
+        // push();
+        // rotateZ(angle++ * 0.1);
+        //rotateY(Math.PI/4);//angle++ *0.1);
+        // rotateX(angle++ * 0.1);
+    
+        // stroke(255);
+        // fill(0, 180, 220);//normalMaterial();
+        
+        // beginShape();//Body
+        //     vertex(0, 0, -radius);
+        //     vertex(-radius/2, 0, radius/2);
+        //     vertex(-radius/2, 0, radius/2);
+        //     vertex(radius/2, 0, radius/2);
+        // endShape();
+        
+        // //fill(0, 180, 220);
+        // beginShape();//Tail fin
+        //     vertex(-1, -1, radius/4);
+        //     vertex(-1, -1, radius/2);
+        //     vertex(-1, -radius/3, radius/2);
+        //     vertex(1, -1, radius/4);
+        //     vertex(1, -1, radius/2);
+        //     vertex(1, -radius/3, radius/2);
+        // endShape();
+        
+        // pop();
+    }
+    
+    //-----------WEB SOCKETS---------------
+    
+    var socket;
+    function initWebSockets() {
+        socket = new WebSocket('ws://' + window.location.hostname + ':81/');
+        socket.onmessage = function(event) {
+            incomingServerCommand(event);
+        }
+    }
+    
+    function incomingServerCommand(event) {
+        console.log(event.data);
+        var incoming  = JSON.parse(event.data);
+        console.log(incoming);
+    
+        // Convert R-hand to L-hand 
+        imu.rotX = -(incoming.rotY);
+        imu.rotY = -(incoming.rotZ); 
+        imu.rotZ = -(-incoming.rotX);
+    
+        // Map IMU rotation matrix to WebGL coordinate system
+        let r1 = [0, 1, 0];
+        let r2 = [0, 0, 1]; 
+        let r3 = [-1, 0, 0];
+        
+        imu.i.x = (r1[0]*incoming.i_x + r1[1]*incoming.i_y + r1[2]*incoming.i_z);
+        imu.i.y = (r2[0]*incoming.i_x + r2[1]*incoming.i_y + r2[2]*incoming.i_z);
+        imu.i.z = (r3[0]*incoming.i_x + r3[1]*incoming.i_y + r3[2]*incoming.i_z);
+
+        imu.j.x = (r1[0]*incoming.j_x + r1[1]*incoming.j_y + r1[2]*incoming.j_z);
+        imu.j.y = (r2[0]*incoming.j_x + r2[1]*incoming.j_y + r2[2]*incoming.j_z);
+        imu.j.z = (r3[0]*incoming.j_x + r3[1]*incoming.j_y + r3[2]*incoming.j_z);
+
+        imu.k.x = (r1[0]*incoming.k_x + r1[1]*incoming.k_y + r1[2]*incoming.k_z);
+        imu.k.y = (r2[0]*incoming.k_x + r2[1]*incoming.k_y + r2[2]*incoming.k_z);
+        imu.k.z = (r3[0]*incoming.k_x + r3[1]*incoming.k_y + r3[2]*incoming.k_z);
+
+        if (incoming.msg)
+        {
+            console.log(msg);
+            //$("").html(incoming.msg);
+        }
+    }
+    
+    function sendServer(message = "") {
+        //.socket.send('This data will be sent');
+        var outgoing = {
+            msg: message
+        };
+        socket.send(JSON.stringify(outgoing));
+    }
+    
+    window.onload = function(event) {
+        initWebSockets();
+    }
+    </script>
+    </html>
