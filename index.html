@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.js"></script>-->
     <script src="jquery-3.6.4.min.js"></script>
     <script src="p5.min.js"></script>
-        <title>IMU</title>
+        <title>3D Graphics</title>
     <style>
         body {
             background-color: #1b1a1a;
@@ -171,7 +171,6 @@ class Mesh{
         }
    }
 }
-   var meshCube = new Mesh();
 
      // Returns a Rotation Matrix about the X axis (in radians)
     // | 1,   0,      0     |
@@ -295,8 +294,10 @@ class Mesh{
         createCanvas(screenWidth, screenWidth, WEBGL);
     }
 
-    angle = (Math.PI/4) * 0.01;
-    z
+    
+    var meshCube = new Mesh();
+    var angle = (Math.PI/4) * 0.001;
+    
     function draw() {
         background(0);
         rectMode(CENTER);
@@ -316,7 +317,7 @@ class Mesh{
         
 
         strokeWeight(16);
-        meshCube.matrix = Multiply(meshCube.matrix, YPR(0, angle, 0));
+        meshCube.matrix = Multiply(YPR(angle*((screenWidth/2)-mouseY), angle*-((screenWidth/2)-mouseX), 0), meshCube.matrix);
         meshCube.drawMesh(100);
 
         // for (let i = 0; i < points.length; i++) {
