@@ -127,27 +127,29 @@ class CubeMesh {
         return triangles;
     }
     
-    transformVertices() {
+    transformVertices() {this.t+=0.01;
         //Transform
         for (let i = 0; i < this.vertices.length; i++) {
             let p = this.vertices[i];
             p = MatrixVectorMultiply(this.rotation, p);
-            p = VectorSum(p, this.position);
             
-            let depth = 1.0/(4.0-p.z);
+            let depth = 1.0/(3.0-this.position.z);
             let perspProjMatrix = [
                 [depth, 0, 0],
                 [0, depth, 0],
                 [0, 0, 0]
             ];
+            
             p = MatrixVectorMultiply(perspProjMatrix, p);
             p = VectorScale(p, this.scale);
+            //p = MatrixVectorMultiply(YPR(0, this.t*(Math.PI/4.1),0), p);
+            p = VectorSum(p, this.position);
             strokeWeight(depth*10);
             point(p.x, p.y);
             this.projVertices[i] = p;
         }
     }
-
+t=0;
     drawTriangles() {
         // Draw Triangles
         for (let t = 0; t < this.getTriangles().length; t++) {
@@ -278,11 +280,6 @@ class CubeMesh {
         return rotationMatrix;
     }
 
-
-
-
-
-
     let min = 340;
     let max = 640;
     let screenWidth = screen.width - 30;
@@ -298,7 +295,7 @@ class CubeMesh {
 
     
     var cube = new CubeMesh();
-    var angle = (Math.PI/4) * 0.001;
+    var angle = (Math.PI/4) * 0.00005;
     
     function draw() {
         background(0);
@@ -306,9 +303,10 @@ class CubeMesh {
         stroke(255);
         strokeWeight(16);
         cube.scale = 100;
-        cube.position.x += 0.01;
-        cube.position.z += 0.01;
-        cube.rotation = Multiply(YPR(angle*((screenWidth/2)-mouseY), angle*-((screenWidth/2)-mouseX), 0), cube.rotation);
+        //cube.position.x -= 0.50;
+        cube.position.y += 0.5;//250;//+= 0.01;
+        //cube.position.z += 0.1;
+        cube.rotation = Multiply(YPR(-angle*((screenWidth/2)-mouseY), angle*((screenWidth/2)-mouseX), 0), cube.rotation);
         cube.DrawMesh();
     }
     
