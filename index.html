@@ -74,35 +74,21 @@
         [0, 0, 0]
     ]
 
-    var cube = [
-        //front
-        {x:-1, y:1, z:1},
-        {x:-1, y:-1, z:1},
-        {x:1, y:-1, z:1},
-        {x:1, y:1, z:1},
-        //back
-        {x:-1, y:1, z:-1},
-        {x:-1, y:-1, z:-1},
-        {x:1, y:-1, z:-1},
-        {x:1, y:1, z:-1}
-    ];
-
-   var points = cube;
-
-class Mesh{
-    matrix = [
+class CubeMesh {
+    scale = 1;//= {x:1,y:1,z:1};
+    position = {x:0,y:0,z:0};
+    rotation = [
         [1,0,0],
         [0,1,0],
         [0,0,1]
     ];
 
     vertices = [
-       //front
        {x:-1, y:1, z:1},
         {x:-1, y:-1, z:1},
         {x:1, y:-1, z:1},
         {x:1, y:1, z:1},
-        //back
+        //forward
         {x:-1, y:1, z:-1},
         {x:-1, y:-1, z:-1},
         {x:1, y:-1, z:-1},
@@ -113,11 +99,11 @@ class Mesh{
 
    getTriangles() {
         let  triangles = [
-            //front
+            //south
             [this.projVertices[0], this.projVertices[1], this.projVertices[2]],
             [this.projVertices[0], this.projVertices[2], this.projVertices[3]],
 
-            //back
+            //north
             [this.projVertices[7], this.projVertices[6], this.projVertices[5]],
             [this.projVertices[7], this.projVertices[5], this.projVertices[4]],
             
@@ -134,31 +120,36 @@ class Mesh{
             [this.projVertices[1], this.projVertices[6], this.projVertices[2]],
 
             //bottom
-            [this.projVertices[0], this.projVertices[4], this.projVertices[7]],
-            [this.projVertices[0], this.projVertices[7], this.projVertices[3]],
+            [this.projVertices[3], this.projVertices[7], this.projVertices[4]],
+            [this.projVertices[3], this.projVertices[4], this.projVertices[0]],
         ];
 
         return triangles;
     }
     
-    drawMesh(scale = 100) {
+    transformVertices() {
+        //Transform
         for (let i = 0; i < this.vertices.length; i++) {
-            strokeWeight(16);
-            let p = MatrixVectorMultiply(this.matrix, this.vertices[i]);
-            let dist = 1.0/(3.0-p.z);
+            let p = this.vertices[i];
+            p = MatrixVectorMultiply(this.rotation, p);
+            p = VectorSum(p, this.position);
+            
+            let depth = 1.0/(4.0-p.z);
             let perspProjMatrix = [
-                [dist, 0, 0],
-                [0, dist, 0],
+                [depth, 0, 0],
+                [0, depth, 0],
                 [0, 0, 0]
             ];
             p = MatrixVectorMultiply(perspProjMatrix, p);
-            p = VectorScale(p, scale);
-            // pProj = MatrixVectorMultiply(orthographicProjectionMatrix, p);
-            strokeWeight(dist*10);
+            p = VectorScale(p, this.scale);
+            strokeWeight(depth*10);
             point(p.x, p.y);
             this.projVertices[i] = p;
         }
+    }
 
+    drawTriangles() {
+        // Draw Triangles
         for (let t = 0; t < this.getTriangles().length; t++) {
             strokeWeight(2);
             let triPoints = this.getTriangles()[t];
@@ -169,6 +160,12 @@ class Mesh{
             line(p2.x, p2.y, 0,      p3.x, p3.y, 0);
             line(p3.x, p3.y, 0,      p1.x, p1.y, 0);
         }
+   }
+   
+   DrawMesh()
+   {
+        this.transformVertices();
+        this.drawTriangles();
    }
 }
 
@@ -236,7 +233,7 @@ class Mesh{
         return vec;
     }
 
-    function VectorSum(Vec1, vec2) {
+    function VectorSum(vec1, vec2) {
         let vectorSum = {x: (vec1.x + vec2.x), y: (vec1.y + vec2.y), z: (vec1.z + vec2.z)};
         return vectorSum;
     }
@@ -281,6 +278,11 @@ class Mesh{
         return rotationMatrix;
     }
 
+
+
+
+
+
     let min = 340;
     let max = 640;
     let screenWidth = screen.width - 30;
@@ -295,96 +297,35 @@ class Mesh{
     }
 
     
-    var meshCube = new Mesh();
+    var cube = new CubeMesh();
     var angle = (Math.PI/4) * 0.001;
     
     function draw() {
         background(0);
         rectMode(CENTER);
-        //angleMode(DEGREES);
-       // angle = mouseX*0.01;
-        //radius = screenWidth/3;//(screen.width <= 700) ? screen.width/4 : 800/4;
         stroke(255);
-        // line(0, 0, 0, imu.i.x * radius, imu.i.y * radius, imu.i.z * radius);
-        // line(0, 0, 0, imu.j.x * radius, imu.j.y * radius, imu.j.z * radius);
-        // line(0, 0, 0, imu.k.x * radius, imu.k.y * radius, imu.k.z * radius);
-        
-        // stroke(255);
-        // point(imu.i.x * radius, imu.i.y * radius, imu.i.z * radius);
-        // point(imu.j.x * radius, imu.j.y * radius, imu.j.z * radius);
-        // point(imu.k.x * radius, imu.k.y * radius, imu.k.z * radius);
-        
-        
-
         strokeWeight(16);
-        meshCube.matrix = Multiply(YPR(angle*((screenWidth/2)-mouseY), angle*-((screenWidth/2)-mouseX), 0), meshCube.matrix);
-        meshCube.drawMesh(100);
-
-        // for (let i = 0; i < points.length; i++) {
-        //     let pt = MatrixVectorMultiply(rotation, points[i]);
-        //     let dist = 1.0/(3-pt.z);
-        //     let perspProjMatrix = [
-        //         [dist, 0, 0],
-        //         [0, dist, 0],
-        //         [0, 0, 0]
-        //     ];
-        //     pt = VectorScale(pt, 100);
-        //     pt = MatrixVectorMultiply(perspProjMatrix, pt);
-        //     strokeWeight(dist*20);
-        //     point(pt.x, pt.y);
-        // }
-        
-        // for (let i = 0; i < meshCube.vertices.length; i++) {
-        //     let pt = MatrixVectorMultiply(rotation, meshCube.vertices[i]);
-        //     let dist = 1.0/(3-pt.z);
-        //     let perspProjMatrix = [
-        //         [dist, 0, 0],
-        //         [0, dist, 0],
-        //         [0, 0, 0]
-        //     ];
-        //     pt = VectorScale(pt, 100);
-        //     pt = MatrixVectorMultiply(perspProjMatrix, pt);
-        //     strokeWeight(dist*20);
-        //     point(pt.x, pt.y);
-
-        // }
-
-        
-
-        
-        
-        // point(rotation[0][0] * radius, rotation[0][1] * radius, rotation[0][2] * radius);
-        // point(rotation[1][0] * radius, rotation[1][1] * radius, rotation[1][2] * radius);
-        // point(rotation[2][0] * radius, rotation[2][1] * radius, rotation[2][2] * radius);
-
-        // push();
-        // rotateZ(angle++ * 0.1);
-        //rotateY(Math.PI/4);//angle++ *0.1);
-        // rotateX(angle++ * 0.1);
-    
-        // stroke(255);
-        // fill(0, 180, 220);//normalMaterial();
-        
-        // beginShape();//Body
-        //     vertex(0, 0, -radius);
-        //     vertex(-radius/2, 0, radius/2);
-        //     vertex(-radius/2, 0, radius/2);
-        //     vertex(radius/2, 0, radius/2);
-        // endShape();
-        
-        // //fill(0, 180, 220);
-        // beginShape();//Tail fin
-        //     vertex(-1, -1, radius/4);
-        //     vertex(-1, -1, radius/2);
-        //     vertex(-1, -radius/3, radius/2);
-        //     vertex(1, -1, radius/4);
-        //     vertex(1, -1, radius/2);
-        //     vertex(1, -radius/3, radius/2);
-        // endShape();
-        
-        // pop();
+        cube.scale = 100;
+        cube.position.x += 0.01;
+        cube.position.z += 0.01;
+        cube.rotation = Multiply(YPR(angle*((screenWidth/2)-mouseY), angle*-((screenWidth/2)-mouseX), 0), cube.rotation);
+        cube.DrawMesh();
     }
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     //-----------WEB SOCKETS---------------
     
     var socket;
