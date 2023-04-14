@@ -35,143 +35,7 @@
 </body>
 <script>
     //-----------GRAPHICS---------------
-    let imu = {
-        rotX: 0,
-        rotY: 0,
-        rotZ: 0,
-    
-        i: {x: 0, y: 0, z: -1},
-        j: {x: 1, y: 0, z: 0},
-        k: {x: 0, y: 1, z: 0},
-
-        posX: 0,
-        posY: 0,
-        posZ: 0
-    };
-
-    var forward = {x:0, y:0, z:-1};
-    var back = {x:0, y:0, z:1};
-    var right = {x:1, y:0, z:0};
-    var left = {x:-1, y:0, z:0};
-    var up = {x:0, y:-1, z:0};
-    var down = {x:0, y:1, z:0};
-    
-    // var rotation = [
-    //     [0, 0, -1],
-    //     [1, 0, 0],
-    //     [0, 1, 0]
-    // ]
-
-    rotation = [
-        [1,0,0],
-        [0,1,0],
-        [0,0,1]
-    ]
-
-    var orthographicProjectionMatrix = [
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 0]
-    ]
-
-class CubeMesh {
-    scale = 1;//= {x:1,y:1,z:1};
-    position = {x:0,y:0,z:0};
-    rotation = [
-        [1,0,0],
-        [0,1,0],
-        [0,0,1]
-    ];
-
-    vertices = [
-       {x:-1, y:1, z:1},
-        {x:-1, y:-1, z:1},
-        {x:1, y:-1, z:1},
-        {x:1, y:1, z:1},
-        //forward
-        {x:-1, y:1, z:-1},
-        {x:-1, y:-1, z:-1},
-        {x:1, y:-1, z:-1},
-        {x:1, y:1, z:-1}
-   ];
-
-   projVertices = [];
-
-   getTriangles() {
-        let  triangles = [
-            //south
-            [this.projVertices[0], this.projVertices[1], this.projVertices[2]],
-            [this.projVertices[0], this.projVertices[2], this.projVertices[3]],
-
-            //north
-            [this.projVertices[7], this.projVertices[6], this.projVertices[5]],
-            [this.projVertices[7], this.projVertices[5], this.projVertices[4]],
-            
-            //right
-            [this.projVertices[3], this.projVertices[2], this.projVertices[6]],
-            [this.projVertices[3], this.projVertices[6], this.projVertices[7]],
-            
-            //left
-            [this.projVertices[4], this.projVertices[5], this.projVertices[1]],
-            [this.projVertices[4], this.projVertices[1], this.projVertices[0]],
-
-            //top
-            [this.projVertices[1], this.projVertices[5], this.projVertices[6]],
-            [this.projVertices[1], this.projVertices[6], this.projVertices[2]],
-
-            //bottom
-            [this.projVertices[3], this.projVertices[7], this.projVertices[4]],
-            [this.projVertices[3], this.projVertices[4], this.projVertices[0]],
-        ];
-
-        return triangles;
-    }
-    
-    transformVertices() {this.t+=0.01;
-        //Transform
-        for (let i = 0; i < this.vertices.length; i++) {
-            let p = this.vertices[i];
-            p = MatrixVectorMultiply(this.rotation, p);
-            
-            let depth = 1.0/(3.0-this.position.z);
-            let perspProjMatrix = [
-                [depth, 0, 0],
-                [0, depth, 0],
-                [0, 0, 0]
-            ];
-            
-            p = MatrixVectorMultiply(perspProjMatrix, p);
-            p = VectorScale(p, this.scale);
-            //p = MatrixVectorMultiply(YPR(0, this.t*(Math.PI/4.1),0), p);
-            p = VectorSum(p, this.position);
-            strokeWeight(depth*10);
-            point(p.x, p.y);
-            this.projVertices[i] = p;
-        }
-    }
-t=0;
-    drawTriangles() {
-        // Draw Triangles
-        for (let t = 0; t < this.getTriangles().length; t++) {
-            strokeWeight(2);
-            let triPoints = this.getTriangles()[t];
-            let p1 = triPoints[0];
-            let p2 = triPoints[1];
-            let p3 = triPoints[2];
-            line(p1.x, p1.y, 0,      p2.x, p2.y, 0);
-            line(p2.x, p2.y, 0,      p3.x, p3.y, 0);
-            line(p3.x, p3.y, 0,      p1.x, p1.y, 0);
-        }
-   }
-   
-   DrawMesh()
-   {
-        this.transformVertices();
-        this.drawTriangles();
-   }
-}
-
-     // Returns a Rotation Matrix about the X axis (in radians)
+         // Returns a Rotation Matrix about the X axis (in radians)
     // | 1,   0,      0     |
     // | 0, Cos(T), -Sin(T) |
     // | 0, Sin(T),  Cos(T) |
@@ -245,7 +109,7 @@ t=0;
         return (vecA.x * vecB.x) + (vecA.y * vecB.y) + (vecA.z * vecB.z);
     }
 
-    function Multiply(matrixA, matrixB)
+    function MatrixMultiply(matrixA, matrixB)
     {
         let result = [[0,0,0], [0,0,0], [0,0,0]];
         for (var r = 0; r < 3; r++)
@@ -276,9 +140,190 @@ t=0;
     // Yaw-Pitch-Roll z-y'-x''(intrinsic rotation) or x-y-z (extrinsic rotation)
     function YPR(roll, pitch, yaw)
     {
-        let rotationMatrix = Multiply(Multiply(RotZ(yaw), RotY(pitch)), RotX(roll));//Multiply(rotation.matrix, RotZ(PI/2.0).matrix);
+        let rotationMatrix = MatrixMultiply(MatrixMultiply(RotZ(yaw), RotY(pitch)), RotX(roll));//MatrixMultiply(rotation.matrix, RotZ(PI/2.0).matrix);
         return rotationMatrix;
     }
+
+    function Matrix4x4Multiply(matrix4x4, columnMatrix) {
+        let mtx = new Matrix4x4();
+        for (var r = 0; r < 4; r++)
+        {
+            let rowVec = new Vec4(matrix4x4[r][0], matrix4x4[r][1], matrix4x4[r][2], matrix4x4[r][3]);
+            for (var c = 0; c < 4; c++)
+            {
+                let columnVec = new Vec4(columnMatrix[0][c], columnMatrix[1][c], columnMatrix[2][c], columnMatrix[3][c]);
+                mtx.matrix[r][c] = DotProduct(rowVec, columnVec);
+            }
+        }
+
+        return mtx.matrix;
+    }
+
+    function Matrix4x4VectorMult(matrix4x4, vec4) {
+        result = [];
+        for (var r = 0; r < 3; r++)
+        {
+            let rowVec = new Vec4(this.matrix[r][0], this.matrix[r][1], this.matrix[r][2], this.matrix[r][3] );
+            result[r] = DotProduct(rowVec, columnVector);
+        }
+
+        return new Vec4(result[0], result[1], result[2], result[3]);
+    }
+
+    class Vec4
+    {
+        x = 0;
+        y = 0;
+        z = 0;
+        w = 1;
+
+        constructor(x, y, z, w = 1) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
+    }
+
+    class Matrix4x4
+    {
+        matrix = [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ];
+    }
+
+    
+
+    let imu = {
+        rotX: 0,
+        rotY: 0,
+        rotZ: 0,
+    
+        i: {x: 0, y: 0, z: -1},
+        j: {x: 1, y: 0, z: 0},
+        k: {x: 0, y: 1, z: 0},
+
+        posX: 0,
+        posY: 0,
+        posZ: 0
+    };
+
+    var forward = {x:0, y:0, z:-1};
+    var back = {x:0, y:0, z:1};
+    var right = {x:1, y:0, z:0};
+    var left = {x:-1, y:0, z:0};
+    var up = {x:0, y:-1, z:0};
+    var down = {x:0, y:1, z:0};
+
+    var orthographicProjectionMatrix = [
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]
+    ]
+
+class CubeMesh {
+    scale = 1;//= {x:1,y:1,z:1};
+    position = {x:0,y:0,z:0};
+    rotation = [
+        [1,0,0],
+        [0,1,0],
+        [0,0,1]
+    ];
+    vertices = [
+       {x:-1, y:1, z:1},
+        {x:-1, y:-1, z:1},
+        {x:1, y:-1, z:1},
+        {x:1, y:1, z:1},
+        //forward
+        {x:-1, y:1, z:-1},
+        {x:-1, y:-1, z:-1},
+        {x:1, y:-1, z:-1},
+        {x:1, y:1, z:-1}
+   ];
+
+   projVertices = [];
+
+   getTriangles() {
+        let  triangles = [
+            //south
+            [this.projVertices[0], this.projVertices[1], this.projVertices[2]],
+            [this.projVertices[0], this.projVertices[2], this.projVertices[3]],
+
+            //north
+            [this.projVertices[7], this.projVertices[6], this.projVertices[5]],
+            [this.projVertices[7], this.projVertices[5], this.projVertices[4]],
+            
+            //right
+            [this.projVertices[3], this.projVertices[2], this.projVertices[6]],
+            [this.projVertices[3], this.projVertices[6], this.projVertices[7]],
+            
+            //left
+            [this.projVertices[4], this.projVertices[5], this.projVertices[1]],
+            [this.projVertices[4], this.projVertices[1], this.projVertices[0]],
+
+            //top
+            [this.projVertices[1], this.projVertices[5], this.projVertices[6]],
+            [this.projVertices[1], this.projVertices[6], this.projVertices[2]],
+
+            //bottom
+            [this.projVertices[3], this.projVertices[7], this.projVertices[4]],
+            [this.projVertices[3], this.projVertices[4], this.projVertices[0]],
+        ];
+
+        return triangles;
+    }
+    
+    transformVertices() {
+        //Transform
+        for (let i = 0; i < this.vertices.length; i++) {
+            let p = this.vertices[i];
+            // Rotate
+            p = MatrixVectorMultiply(this.rotation, p);
+            // Translate
+            p = VectorSum(p, this.position);
+            //Project
+            let depth = 1.0/(3.0-this.position.z);
+            let perspProjMatrix = [
+                [depth, 0, 0],
+                [0, depth, 0],
+                [0, 0, 1]
+            ];
+            p = MatrixVectorMultiply(perspProjMatrix, p);
+            p = VectorScale(p, this.scale);
+            
+            strokeWeight(depth*10);
+            point(p.x, p.y);
+            
+
+            this.projVertices[i] = p;
+        }
+    }
+
+    drawTriangles() {
+        // Draw Triangles
+        for (let t = 0; t < this.getTriangles().length; t++) {
+            strokeWeight(2);
+            let triPoints = this.getTriangles()[t];
+            let p1 = triPoints[0];
+            let p2 = triPoints[1];
+            let p3 = triPoints[2];
+            if (this.position.z < 3) {
+                line(p1.x, p1.y, 0,      p2.x, p2.y, 0);
+                line(p2.x, p2.y, 0,      p3.x, p3.y, 0);
+                line(p3.x, p3.y, 0,      p1.x, p1.y, 0);
+            }
+        }
+   }
+   
+   DrawMesh()
+   {
+        this.transformVertices();
+        this.drawTriangles();
+   }
+}
 
     let min = 340;
     let max = 640;
@@ -295,7 +340,7 @@ t=0;
 
     
     var cube = new CubeMesh();
-    var angle = (Math.PI/4) * 0.00005;
+    var angle = (Math.PI/4) * 0.0005;
     
     function draw() {
         background(0);
@@ -303,10 +348,10 @@ t=0;
         stroke(255);
         strokeWeight(16);
         cube.scale = 100;
-        //cube.position.x -= 0.50;
-        cube.position.y += 0.5;//250;//+= 0.01;
-        //cube.position.z += 0.1;
-        cube.rotation = Multiply(YPR(-angle*((screenWidth/2)-mouseY), angle*((screenWidth/2)-mouseX), 0), cube.rotation);
+        //cube.position.x += 0.0050;
+        //cube.position.y += 0.005;//250;//+= 0.01;
+        //cube.position.z += 0.01;
+        cube.rotation = MatrixMultiply(YPR(angle*((screenWidth/2)-mouseY), 0.000001+angle*-((screenWidth/2)-mouseX), 0), cube.rotation);
         cube.DrawMesh();
     }
     
