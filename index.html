@@ -131,13 +131,18 @@
         return rotationMatrix;
     }
 
+
+    function DotProduct4(vecA, vecB) {
+        return (vecA[0] * vecB[0]) + (vecA[1] * vecB[1]) + (vecA[2] * vecB[2]) + (vecA[3] * vecB[3]);
+    }
+
     function Matrix4x4Multiply(matrix4x4, columnMatrix) {
         let mtx = new Matrix4x4();
         for (var r = 0; r < 4; r++) {
             let rowVec = new Vec4(matrix4x4[r][0], matrix4x4[r][1], matrix4x4[r][2], matrix4x4[r][3]);
             for (var c = 0; c < 4; c++) {
                 let columnVec = new Vec4(columnMatrix[0][c], columnMatrix[1][c], columnMatrix[2][c], columnMatrix[3][c]);
-                mtx.matrix[r][c] = DotProduct(rowVec, columnVec);
+                mtx.matrix[r][c] = DotProduct4(rowVec.v, columnVec.v);
             }
         }
 
@@ -148,7 +153,7 @@
         result = [];
         for (var r = 0; r < 3; r++) {
             let rowVec = new Vec4(matrix4x4[r][0], matrix4x4[r][1], matrix4x4[r][2], matrix4x4[r][3]);
-            result[r] = DotProduct(rowVec, vec4);
+            result[r] = DotProduct4(rowVec.v, vec4.v);
         }
 
         return new Vec4(result[0], result[1], result[2], result[3]);
@@ -177,7 +182,7 @@
 
         constructor(mtx4x4)
         {
-            this.matrix = mtx4x4;
+            this.matrix = mtx4x4 || this.matrix;
         }
     }
 
@@ -195,10 +200,13 @@
     }
 
     class Vec4 extends Vec3 {
-        get w() { return this.vector[3]} set w(val) {this.vector[3] = val;}
+        get w() { return this.v[3]} set w(val) {this.v[3] = val;}
 
         constructor(x = 0, y = 0, z = 0, w = 1) {
             super(x, y, z);
+            // this.v[0] = x;
+            // this.v[1] = y;
+            // this.v[2] = z;
             this.v[3] = w;
         }
     }
@@ -276,7 +284,29 @@
         transformVertices() {
             //Transform
             for (let i = 0; i < this.vertices.length; i++) {
-                let p = this.vertices[i];
+                let p = new Vec4(this.vertices[i].x, this.vertices[i].y, this.vertices[i].z, 1);
+
+                let scalingMatrix = [
+                    [this.scale, 0, 0, 0],
+                    [0, this.scale, 0, 0],
+                    [0, 0, this.scale, 0],
+                    [0, 0, 0, 1]
+                ];
+                
+                let rotationMatrix = [
+                    [this.rotation[0][0], this.rotation[0][1], this.rotation[0][2], 0],
+                    [this.rotation[1][0], this.rotation[1][1], this.rotation[1][2], 0],
+                    [this.rotation[2][0], this.rotation[2][1], this.rotation[2][2], 0],
+                    [       0,                      0,                  0,          1]
+                ];
+
+                let translationMatrix = [
+                    [1, 0, 0, this.position.x],
+                    [0, 1, 0, this.position.y],
+                    [0, 0, 1, this.position.z],
+                    [0, 0, 0, 1]
+                ];
+
                 // Scale
                 //p = VectorScale(p, this.scale);
                 // Rotate
@@ -338,18 +368,18 @@
     function setup() {
         createCanvas(screenWidth, screenWidth, WEBGL);
     }
-
+v4 = new Vec4(3, 3, 3);
     function draw() {
         background(0);
         rectMode(CENTER);
         stroke(255);
         strokeWeight(16);
-        cube.scale = 50;
+        cube.scale = 100;
         //cube.position.x += 0.0050;
         //cube.position.y += 0.005;//250;//+= 0.01;
         cube.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube.rotation);
         cube.position = VectorSum(cube.position, VectorScale(back, 0.01));
-        
+
         cube.DrawMesh();
     }
 </script>
