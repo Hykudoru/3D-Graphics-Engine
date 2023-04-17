@@ -244,7 +244,7 @@
                 [this.rotation[0][0], this.rotation[0][1], this.rotation[0][2], this.position.x],
                 [this.rotation[1][0], this.rotation[1][1], this.rotation[1][2], this.position.y],
                 [this.rotation[2][0], this.rotation[2][1], this.rotation[2][2], this.position.z],
-                [       0,                      0,                  0,                 1    ]
+                [       0,                      0,                  0,                 1]
             ];
         }
 
@@ -278,29 +278,29 @@
             for (let i = 0; i < this.vertices.length; i++) {
                 let p = this.vertices[i];
                 // Scale
-                p = VectorScale(p, this.scale);
+                //p = VectorScale(p, this.scale);
                 // Rotate
-                //p = MatrixVectorMultiply(this.rotation, p);
+                p = MatrixVectorMultiply(this.rotation, p);
                 // Translate position
-                //p = VectorSum(p, this.position);
+                p = VectorSum(p, this.position);
 
-                p = Matrix4x4VectorMult(this.matrix4x4, p);
+                //p = Matrix4x4VectorMult(this.matrix4x4, p);
 
                 //Project from world space to screen space (image space) 
-                let depth = 1.0 / (3.0 - this.position.z);
+                let depth = 1.0 / (3.0 - p.z);
                 let perspProjMatrix = [
                     [depth, 0, 0],
                     [0, depth, 0],
                     [0, 0, 1]
                 ];
-                let projPoint = MatrixVectorMultiply(perspProjMatrix, p);
-
+                p = MatrixVectorMultiply(perspProjMatrix, p);
+                p = VectorScale(p, this.scale);
                 // plot 2D
-                strokeWeight(depth * 10);
-                point(projPoint.x, projPoint.y);
+                strokeWeight(depth * 20);
+                point(p.x, p.y);
 
                 // update 
-                this.projVertices[i] = projPoint;
+                this.projVertices[i] = p;
             }
         }
 
@@ -312,6 +312,7 @@
                 let p1 = triPoints[0];
                 let p2 = triPoints[1];
                 let p3 = triPoints[2];
+            
                 if (this.position.z < 3) {
                     line(p1.x, p1.y, 0, p2.x, p2.y, 0);
                     line(p2.x, p2.y, 0, p3.x, p3.y, 0);
@@ -325,12 +326,6 @@
             this.drawTriangles();
         }
     }
-
-
-
-
-
-
 
 
     let min = 340;
@@ -349,11 +344,11 @@
         rectMode(CENTER);
         stroke(255);
         strokeWeight(16);
-        cube.scale = 100;
+        cube.scale = 50;
         //cube.position.x += 0.0050;
         //cube.position.y += 0.005;//250;//+= 0.01;
         cube.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube.rotation);
-        cube.position.z += 0.01;
+        cube.position = VectorSum(cube.position, VectorScale(back, 0.01));
         
         cube.DrawMesh();
     }
