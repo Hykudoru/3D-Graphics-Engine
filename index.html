@@ -150,6 +150,20 @@
         return rotationMatrix;
     }
 
+    //--------------- 4x4 ---------------------
+
+    function Transpose4x4(matrix) {
+        let mtx = new Matrix4x4();
+
+        for (var r = 0; r < 4; r++) {
+            mtx.matrix[0][r] = matrix[r][0];
+            mtx.matrix[1][r] = matrix[r][1];
+            mtx.matrix[2][r] = matrix[r][2];
+            mtx.matrix[3][r] = matrix[r][3];
+        }
+
+        return mtx.matrix;
+    }
 
     function Dot4(vecA, vecB) {
         return (vecA.x * vecB.x) + (vecA.y * vecB.y) + (vecA.z * vecB.z) + (vecA.w * vecB.w);
@@ -178,13 +192,15 @@
         return result;
     } 
 
+
+    
     class Matrix3x3 
     {
         matrix = [
-                [1, 0, 0],
-                [0, 1, 0],
-                [0, 0, 1]
-            ];
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ];
         constructor(mtx3x3)
         {
             let matrix = [
@@ -212,7 +228,8 @@
         }
     }
 
-    class Vec3 {
+    class Vec3 
+    {
         v = [0, 0, 0];
         get x() { return this.v[0];} set x(val) {this.v[0] = val;}
         get y() { return this.v[1];} set y(val) {this.v[1] = val;}
@@ -235,7 +252,8 @@
         }
     }
 
-    class Vec4 extends Vec3 {
+    class Vec4 extends Vec3 
+    {
         get w() { return this.v[3]} set w(val) {this.v[3] = val;}
 
         constructor(x = 0, y = 0, z = 0, w = 1) {
@@ -257,9 +275,81 @@
         [0, 0, 0]
     ];
 
-    cam = new Vec4(0,0,-1, 1);
+    class Transform
+    {
+        scale = new Vec3(1, 1, 1);
+        position = new Vec3(0, 0, 0);
+        rotation = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ];
 
-    class CubeMesh 
+        // constructor(position = new Vec3(0, 0, 0), rotationEuler = new Vec3(0, 0, 0), scale = new Vec3(1, 1, 1))
+        // {
+        //     this.scale = scale;
+        //     this.position = position;
+        //     this.rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
+        // }
+
+        get scalingMatrix4x4() 
+        {
+            return [
+                [this.scale.x, 0, 0, 0],
+                [0, this.scale.y, 0, 0],
+                [0, 0, this.scale.z, 0],
+                [0, 0, 0, 1]
+            ];
+        }
+
+        get rotationMatrix4x4() {
+                return [
+                    [this.rotation[0][0], this.rotation[0][1], this.rotation[0][2], 0],
+                    [this.rotation[1][0], this.rotation[1][1], this.rotation[1][2], 0],
+                    [this.rotation[2][0], this.rotation[2][1], this.rotation[2][2], 0],
+                    [       0,                      0,                  0,          1]
+                ];
+        }        
+
+        get translationMatrix4x4() {
+            return [
+                [1, 0, 0, this.position.x],
+                [0, 1, 0, this.position.y],
+                [0, 0, 1, this.position.z],
+                [0, 0, 0, 1]
+            ];
+        }
+
+        get translationMatrix4x4Inverse() {
+            return [
+                [1, 0, 0, -this.position.x],
+                [0, 1, 0, -this.position.y],
+                [0, 0, 1, -this.position.z],
+                [0, 0, 0, 1]
+            ];
+        }
+
+        get TR() {
+            return [
+                    [this.rotation[0][0], this.rotation[0][1], this.rotation[0][2],  this.position.x],
+                    [this.rotation[1][0], this.rotation[1][1], this.rotation[1][2],  this.position.y],
+                    [this.rotation[2][0], this.rotation[2][1], this.rotation[2][2],  this.position.z],
+                    [       0,                      0,                  0,          1]
+                ];
+        }
+
+        get TRInverse() {
+            return MatrixMult4x4(Transpose4x4(this.rotationMatrix4x4), this.translationMatrix4x4Inverse);
+        }
+    }
+
+    class Camera extends Transform 
+    {   
+    }
+
+    var camera = new Camera();
+
+    class CubeMesh extends Transform 
     {
         // Local Space (Object Space)
         vertices = [
@@ -275,14 +365,6 @@
         ];
 
         projVertices = [];
-
-        scale = new Vec3(1, 1, 1);
-        position = new Vec3(0, 0, 0);
-        rotation = [
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1]
-        ];
 
         get triangles() {
             let triangles = [
@@ -318,53 +400,28 @@
                 
                 // Homogeneous coords (x, y, z, w=1)
                 p = new Vec4(this.vertices[i].x, this.vertices[i].y, this.vertices[i].z, 1);
-
+                console.log(this.position.ToString());
                 // ======== World space ========
                 // Transform local coords to world-space coords.
-
-                let scalingMatrix = [
-                    [this.scale.x, 0, 0, 0],
-                    [0, this.scale.y, 0, 0],
-                    [0, 0, this.scale.z, 0],
-                    [0, 0, 0, 1]
-                ];
                 
-                // let rotationMatrix = [
-                //     [this.rotation[0][0], this.rotation[0][1], this.rotation[0][2], 0],
-                //     [this.rotation[1][0], this.rotation[1][1], this.rotation[1][2], 0],
-                //     [this.rotation[2][0], this.rotation[2][1], this.rotation[2][2], 0],
-                //     [       0,                      0,                  0,          1]
-                // ];
-
-                // let translationMatrix = [
-                //     [1, 0, 0, this.position.x],
-                //     [0, 1, 0, this.position.y],
-                //     [0, 0, 1, this.position.z],
-                //     [0, 0, 0, 1]
-                // ];
-
-                let modelMatrix = [
-                    [this.rotation[0][0], this.rotation[0][1], this.rotation[0][2],  this.position.x],
-                    [this.rotation[1][0], this.rotation[1][1], this.rotation[1][2],  this.position.y],
-                    [this.rotation[2][0], this.rotation[2][1], this.rotation[2][2],  this.position.z],
-                    [       0,                      0,                  0,          1]
-                ];
-
-
+                let modelMatrix = this.TR;
+                let worldPoint = Matrix4x4VectorMult(modelMatrix, p);
+                let transformation = MatrixMult4x4(modelMatrix, this.scalingMatrix4x4);
                 // let modelMatrix = MatrixMult4x4(translationMatrix, rotationMatrix);
                 // World-space coords
-                let worldPoint = Matrix4x4VectorMult(modelMatrix, p);
-                modelMatrix = MatrixMult4x4(scalingMatrix, modelMatrix);
+                
+                //transformation = MatrixMult4x4(this.scalingMatrix4x4, modelMatrix);
   
                 // ====== View space ========
                 // (Camera space, Eye space). Transform world coordinates to view coordinates.
+
+                //let viewMatrix = camera.TRInverse;
                 
-                let viewMatrix = [];
-                
+                //transformation = MatrixMult4x4(viewMatrix, modelMatrix);
                 // ======== Screen space ==========
                 // Project to screen space (image space) 
                 
-                let depth = 1.0/(3.0-worldPoint.z);
+                let depth = 1.0 / (3.0-worldPoint.z);
                 let perspProjMatrix = [
                     [depth, 0, 0, 0],
                     [0, depth, 0, 0],
@@ -372,7 +429,7 @@
                     [0, 0, 1, 0]
                 ];
                 
-                let matrix = MatrixMult4x4(perspProjMatrix, modelMatrix);
+                let matrix = MatrixMult4x4(perspProjMatrix, transformation);
                 p = Matrix4x4VectorMult(matrix, p);
                 strokeWeight(depth);
                 point(p.x, p.y);
@@ -407,10 +464,11 @@
 
     let min = 340;
     let max = 640;
-    let screenWidth = 600;//screen.width - 20;
-    let screenHeight = 600; //screen.height - 20; //screen.height;// - 30;
+    let screenWidth = 800;//screen.width - 20;
+    let screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
     var angle = (Math.PI / 4) * 0.0005;
     var cube = new CubeMesh();
+    var cube2 = new CubeMesh();
 
     function setup() {
         createCanvas(screenWidth, screenWidth, WEBGL);
@@ -421,33 +479,42 @@
         rectMode(CENTER);
         stroke(255);
         strokeWeight(16);
-        cube.scale = new Vec3(50, 50, 50);
-        //cube.position.x += 0.0050;
-        cube.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube.rotation);
-        //cube.position.z  -= 0.005;//10/mouseY;//250;//+= 0.01;
-        //cube.position.x += -0.010;//10/mouseY;//250;//+= 0.01;
-        //cube.translate(VectorScale(back, 0.01));
 
+        cube.scale = new Vec3(50, 50, 50);
+        cube2.scale = new Vec3(100, 100, 100);
+        
+        cube.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube.rotation);
+        cube2.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube2.rotation);
+        cube2.position.x += 1.5;
+  
         cube.DrawMesh();
+        cube2.DrawMesh();
     }
 
+    moveSpeed = 1;
     onkeydown = function(e) {
         // console.log(e);
         if (e.key == 'w') {
-            let dir = (VectorScale(forward, 0.5));
+            let dir = (VectorScale(forward, moveSpeed));
             cube.position.z += dir.z;
         }
         if (e.key == 's') {
-            let dir = (VectorScale(back, 0.5));
+            let dir = (VectorScale(back, moveSpeed));
             cube.position.z += dir.z;
         }
         if (e.key == 'a') {
-            let dir = (VectorScale(left, 0.5));
+            let dir = (VectorScale(left, moveSpeed));
             cube.position.x += dir.x;
         }
         if (e.key == 'd') {
-            let dir = (VectorScale(right, 0.5));
+            let dir = (VectorScale(right, moveSpeed));
             cube.position.x += dir.x;
+        }
+
+        if (e.key == 'p') {
+            //console.log(camera.position);
+            //console.log(t.position.ToString());
+            console.log(t.position.x);
         }
     };
 </script>
