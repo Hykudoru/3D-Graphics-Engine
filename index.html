@@ -364,7 +364,7 @@
                 // ======== Screen space ==========
                 // Project to screen space (image space) 
                 
-                let depth = 1.0/(2.0-worldPoint.z);
+                let depth = 1.0/(3.0-worldPoint.z);
                 let perspProjMatrix = [
                     [depth, 0, 0, 0],
                     [0, depth, 0, 0],
@@ -424,12 +424,32 @@
         cube.scale = new Vec3(50, 50, 50);
         //cube.position.x += 0.0050;
         cube.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube.rotation);
-        cube.position.z  -= 0.005;//10/mouseY;//250;//+= 0.01;
+        //cube.position.z  -= 0.005;//10/mouseY;//250;//+= 0.01;
         //cube.position.x += -0.010;//10/mouseY;//250;//+= 0.01;
         //cube.translate(VectorScale(back, 0.01));
 
         cube.DrawMesh();
     }
+
+    onkeydown = function(e) {
+        // console.log(e);
+        if (e.key == 'w') {
+            let dir = (VectorScale(forward, 0.5));
+            cube.position.z += dir.z;
+        }
+        if (e.key == 's') {
+            let dir = (VectorScale(back, 0.5));
+            cube.position.z += dir.z;
+        }
+        if (e.key == 'a') {
+            let dir = (VectorScale(left, 0.5));
+            cube.position.x += dir.x;
+        }
+        if (e.key == 'd') {
+            let dir = (VectorScale(right, 0.5));
+            cube.position.x += dir.x;
+        }
+    };
 </script>
 
 </html>
