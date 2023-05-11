@@ -55,6 +55,7 @@
     let max = 640;
     let screenWidth = 800;//screen.width - 20;
     let screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
+    
     var forward = { x: 0, y: 0, z: -1 };
     var back = { x: 0, y: 0, z: 1 };
     var right = { x: 1, y: 0, z: 0 };
@@ -71,6 +72,7 @@
     var fov = 15*Math.PI/180.0;
 
     //-----------GRAPHICS---------------
+
     // Returns a Rotation Matrix about the X axis (in radians)
     // | 1,   0,      0     |
     // | 0, Cos(T), -Sin(T) |
@@ -365,18 +367,6 @@
         get TRInverse() {
             return MatrixMult4x4(Transpose4x4(this.rotationMatrix4x4), this.translationMatrix4x4Inverse);
         }
-
-        Scale(x, y, z) {
-
-        }
-
-        Translate(x, y, z) {
-
-        }
-
-        Rotate(eulerX, eulerY, eulerZ) {
-
-        }
     }
 
     class Camera extends Transform 
@@ -443,11 +433,6 @@
                 let modelMatrix = this.TRS;
                 let worldPoint = Matrix4x4VectorMult(modelMatrix, p);
                 
-                
-                // World-space coords
-                
-                //transformation = MatrixMult4x4(this.scalingMatrix4x4, modelMatrix);
-  
                 // ====== View space ========
                 // (Camera space, Eye space). Transform world coordinates to view coordinates.
                 //let viewMatrix = camera.TRInverse;
@@ -471,19 +456,8 @@
 
                 worldPoint.w /= worldPoint.w;
                 let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, worldPoint);
-               perspPoint = VectorScale(perspPoint, this.scale.x);
+                perspPoint = VectorScale(perspPoint, this.scale.x);
                
-               
-               // let perspPoint = worldPoint;
-                
-            //    perspPoint = Matrix4x4VectorMult(perspDivideMatrix, perspPoint);
-
-                // worldPoint.x /= worldPoint.w;
-                // worldPoint.y /= worldPoint.w;
-                // worldPoint.z /= worldPoint.w;
-
-                //let perspPoint = worldPoint;//Matrix4x4VectorMult(perspDivideMatrix, worldPoint);
-                
                 strokeWeight(0);
                 point(perspPoint.x, perspPoint.y);
                 this.projVertices[i] = perspPoint;
@@ -545,7 +519,7 @@
         cube2.DrawMesh();
     }
 
-    var moveSpeed = 1;
+    var moveSpeed = 2;
     window.onkeydown = function(e) {
         // console.log(e);
         if (e.key == 'w') {
