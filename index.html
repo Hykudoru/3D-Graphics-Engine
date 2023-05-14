@@ -10,6 +10,7 @@
     <script src="jquery-3.6.4.min.js"></script>
     <script src="p5.min.js"></script>
     <script src="matrix.js"></script>
+    <script src="graphics.js"></script>
     <title>3D Graphics</title>
     <style>
         body {
@@ -55,464 +56,31 @@
     let max = 640;
     let screenWidth = 800;//screen.width - 20;
     let screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
-    
-    var forward = { x: 0, y: 0, z: -1 };
-    var back = { x: 0, y: 0, z: 1 };
-    var right = { x: 1, y: 0, z: 0 };
-    var left = { x: -1, y: 0, z: 0 };
-    var up = { x: 0, y: -1, z: 0 };
-    var down = { x: 0, y: 1, z: 0 };
 
-    var orthographicProjectionMatrix = [
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 0]
-    ];
-
-    var fov = 15*Math.PI/180.0;
-
-    //-----------GRAPHICS---------------
-
-    // Returns a Rotation Matrix about the X axis (in radians)
-    // | 1,   0,      0     |
-    // | 0, Cos(T), -Sin(T) |
-    // | 0, Sin(T),  Cos(T) |
-    function RotX(theta) {
-        let Cos = cos(theta);
-        let Sin = sin(theta);
-
-        let matrix = [
-            [1, 0, 0],
-            [0, Cos, -Sin],
-            [0, Sin, Cos]
-        ];
-
-        return matrix;
-    }
-
-    // Returns a Rotation Matrix about the Y axis (in radians)
-    // | Cos(T),  0,   Sin(T)  |
-    // |   0,     1,     0     |
-    // |-Sin(T),  0,   Cos(T)  |
-    function RotY(theta) {
-        let Cos = cos(theta);
-        let Sin = sin(theta);
-
-        let matrix = [
-            [Cos, 0, Sin],
-            [0, 1, 0],
-            [-Sin, 0, Cos]
-        ];
-
-        return matrix;
-    }
-
-    // Returns a Rotation Matrix about the Z axis (in radians)
-    // | Cos(T), -Sin(T), 0 |
-    // | Sin(T),  Cos(T), 0 |
-    // |   0,      0,     1 |
-    function RotZ(theta) {
-        let Cos = cos(theta);
-        let Sin = sin(theta);
-
-        let matrix = [
-            [Cos, -Sin, 0],
-            [Sin, Cos, 0],
-            [0, 0, 1]
-        ];
-
-        return matrix;
-    }
-
-    function VectorScale(vector, scaler) {
-        let vec = new Vec3();
-        vec.x = vector.x * scaler;
-        vec.y = vector.y * scaler;
-        vec.z = vector.z * scaler;
-
-        return vec;
-    }
-
-    function VectorSum(vec1, vec2) {
-        let vectorSum = new Vec3((vec1.x + vec2.x), (vec1.y + vec2.y), (vec1.z + vec2.z));
-        return vectorSum;
-    }
-
-    function DotProduct(vecA, vecB) {
-        return (vecA.x * vecB.x) + (vecA.y * vecB.y) + (vecA.z * vecB.z);
-    }
-
-    function MatrixMultiply(matrixA, matrixB) {
-        let result = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
-        for (var r = 0; r < 3; r++) {
-            let rowVec = new Vec3(matrixA[r][0], matrixA[r][1], matrixA[r][2]);
-            for (var c = 0; c < 3; c++) {
-                let columnVec = new Vec3(matrixB[0][c], matrixB[1][c], matrixB[2][c]);
-                result[r][c] = DotProduct(rowVec, columnVec);
-            }
-        }
-
-        return result;
-    }
-
-    function MatrixVectorMultiply(matrix, columnVector) {
-        let result = [0, 0, 0];
-        for (var r = 0; r < 3; r++) {
-            let rowVec = new Vec3(matrix[r][0], matrix[r][1], matrix[r][2]);
-            result[r] = DotProduct(rowVec, columnVector);
-        }
-
-        return new Vec3(result[0], result[1], result[2]);
-    }
-
-
-    // Yaw-Pitch-Roll z-y'-x''(intrinsic rotation) or x-y-z (extrinsic rotation)
-    function YPR(roll, pitch, yaw) {
-        let rotationMatrix = MatrixMultiply(MatrixMultiply(RotZ(yaw), RotY(pitch)), RotX(roll));//MatrixMultiply(rotation.matrix, RotZ(PI/2.0).matrix);
-        return rotationMatrix;
-    }
-
-    //--------------- 4x4 ---------------------
-
-    function Transpose4x4(matrix) {
-        let mtx = new Matrix4x4();
-
-        for (var r = 0; r < 4; r++) {
-            mtx.matrix[0][r] = matrix[r][0];
-            mtx.matrix[1][r] = matrix[r][1];
-            mtx.matrix[2][r] = matrix[r][2];
-            mtx.matrix[3][r] = matrix[r][3];
-        }
-
-        return mtx.matrix;
-    }
-
-    function Dot4(vecA, vecB) {
-        return (vecA.x * vecB.x) + (vecA.y * vecB.y) + (vecA.z * vecB.z) + (vecA.w * vecB.w);
-    }
-
-    function MatrixMult4x4(matrix, columnMatrix) {
-        let mtx = new Matrix4x4();
-        for (var r = 0; r < 4; r++) {
-            let rowVec = new Vec4(matrix[r][0], matrix[r][1], matrix[r][2], matrix[r][3]);
-            for (var c = 0; c < 4; c++) {
-                let columnVec = new Vec4(columnMatrix[0][c], columnMatrix[1][c], columnMatrix[2][c], columnMatrix[3][c]);
-                mtx.matrix[r][c] = Dot4(rowVec, columnVec);
-            }
-        }
-
-        return mtx.matrix;
-    }
-
-    function Matrix4x4VectorMult(matrix, vec4) {
-        let result = new Vec4();
-        for (var r = 0; r < 4; r++) {
-            let rowVec = new Vec4(matrix[r][0], matrix[r][1], matrix[r][2], matrix[r][3]);
-            result.v[r] = Dot4(rowVec, vec4);
-        }
-
-        if (result.w != 0.0) {
-            result.x /= result.w;
-            result.y /= result.w;
-            result.z /= result.w;
-            // result.w /= result.w;
-        }
-
-        return result;
-    } 
-
-    class Matrix3x3 
-    {
-        matrix = [
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1]
-        ];
-        constructor(mtx3x3)
-        {
-            let matrix = [
-                [1, 0, 0],
-                [0, 1, 0],
-                [0, 0, 1]
-            ];
-
-            this.matrix = mtx3x3 || matrix;
-        }
-    }
-    
-    class Matrix4x4 
-    {    
-        constructor(mtx4x4)
-        {
-            let matrix = [
-                [1, 0, 0, 0],
-                [0, 1, 0, 0],
-                [0, 0, 1, 0],
-                [0, 0, 0, 1]
-            ];
-
-            this.matrix = mtx4x4 || matrix;
-        }
-    }
-
-    class Vec3 
-    {
-        v = [0, 0, 0];
-        get x() { return this.v[0];} set x(val) {this.v[0] = val;}
-        get y() { return this.v[1];} set y(val) {this.v[1] = val;}
-        get z() { return this.v[2];} set z(val) {this.v[2] = val;}
-
-        constructor(x = 0, y = 0, z = 0) {
-            this.v[0] = x;
-            this.v[1] = y;
-            this.v[2] = z;
-        }
-
-        ToString() {
-            let str = "";
-            this.v.forEach(element => {
-                str += " "+element;
-            });
-            str += "\n\r";
-
-            return str;
-        }
-    }
-
-    class Vec4 extends Vec3 
-    {
-        get w() { return this.v[3]} set w(val) {this.v[3] = val;}
-
-        constructor(x = 0, y = 0, z = 0, w = 1) {
-            super(x, y, z);
-            this.v[3] = w;
-        }
-    }
-
-    class Transform
-    {
-        scale = new Vec3(1, 1, 1);
-        position = new Vec3(0, 0, 0);
-        rotation = [
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1]
-        ];
-
-        // constructor(position = new Vec3(0, 0, 0), rotationEuler = new Vec3(0, 0, 0), scale = new Vec3(1, 1, 1))
-        // {
-        //     this.scale = scale;
-        //     this.position = position;
-        //     this.rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
-        // }
-        constructor(scale = 1) {
-            this.scale.x = scale;
-            this.scale.y = scale;
-            this.scale.z = scale;
-        }
-
-        get scalingMatrix4x4() 
-        {
-            return [
-                [this.scale.x, 0, 0, 0],
-                [0, this.scale.y, 0, 0],
-                [0, 0, this.scale.z, 0],
-                [0, 0, 0, 1]
-            ];
-        }
-
-        get rotationMatrix4x4() {
-                return [
-                    [this.rotation[0][0], this.rotation[0][1], this.rotation[0][2], 0],
-                    [this.rotation[1][0], this.rotation[1][1], this.rotation[1][2], 0],
-                    [this.rotation[2][0], this.rotation[2][1], this.rotation[2][2], 0],
-                    [       0,                      0,                  0,          1]
-                ];
-        }        
-
-        get translationMatrix4x4() {
-            return [
-                [1, 0, 0, this.position.x],
-                [0, 1, 0, this.position.y],
-                [0, 0, 1, this.position.z],
-                [0, 0, 0, 1]
-            ];
-        }
-
-        get translationMatrix4x4Inverse() {
-            return [
-                [1, 0, 0, -this.position.x],
-                [0, 1, 0, -this.position.y],
-                [0, 0, 1, -this.position.z],
-                [0, 0, 0, 1]
-            ];
-        }
-
-        get TRS() {
-            return MatrixMult4x4(MatrixMult4x4(this.translationMatrix4x4, this.rotationMatrix4x4), this.scalingMatrix4x4);
-            //return MatrixMult4x4(this.translationMatrix4x4, MatrixMult4x4(this.rotationMatrix4x4, this.scalingMatrix4x4));
-        }
-
-        get TR() {
-            return MatrixMult4x4(this.translationMatrix4x4, this.rotationMatrix4x4);
-
-            // return [
-            //         [this.rotation[0][0], this.rotation[0][1], this.rotation[0][2],  this.position.x],
-            //         [this.rotation[1][0], this.rotation[1][1], this.rotation[1][2],  this.position.y],
-            //         [this.rotation[2][0], this.rotation[2][1], this.rotation[2][2],  this.position.z],
-            //         [       0,                      0,                  0,          1]
-            //     ];
-        }
-
-        get TRInverse() {
-            return MatrixMult4x4(Transpose4x4(this.rotationMatrix4x4), this.translationMatrix4x4Inverse);
-        }
-    }
-
-    class Camera extends Transform 
-    {   
-    }
-
-    var camera = new Camera();
-
-    class CubeMesh extends Transform 
-    {
-        // Local Space (Object Space)
-        vertices = [
-            { x: -1, y: 1, z: 1 },
-            { x: -1, y: -1, z: 1 },
-            { x: 1, y: -1, z: 1 },
-            { x: 1, y: 1, z: 1 },
-            //forward
-            { x: -1, y: 1, z: -1 },
-            { x: -1, y: -1, z: -1 },
-            { x: 1, y: -1, z: -1 },
-            { x: 1, y: 1, z: -1 }
-        ];
-
-        projVertices = [];
-
-        get triangles() {
-            let triangles = [
-                //south
-                [this.projVertices[0], this.projVertices[1], this.projVertices[2]],
-                [this.projVertices[0], this.projVertices[2], this.projVertices[3]],
-                //north
-                [this.projVertices[7], this.projVertices[6], this.projVertices[5]],
-                [this.projVertices[7], this.projVertices[5], this.projVertices[4]],
-                //right
-                [this.projVertices[3], this.projVertices[2], this.projVertices[6]],
-                [this.projVertices[3], this.projVertices[6], this.projVertices[7]],
-                //left
-                [this.projVertices[4], this.projVertices[5], this.projVertices[1]],
-                [this.projVertices[4], this.projVertices[1], this.projVertices[0]],
-                //top
-                [this.projVertices[1], this.projVertices[5], this.projVertices[6]],
-                [this.projVertices[1], this.projVertices[6], this.projVertices[2]],
-                //bottom
-                [this.projVertices[3], this.projVertices[7], this.projVertices[4]],
-                [this.projVertices[3], this.projVertices[4], this.projVertices[0]],
-            ];
-
-            return triangles;
-        }
-        
-        transformVertices() {
-            //Transform
-            for (let i = 0; i < this.vertices.length; i++) {
-                
-                // local space (Object space) coords (x, y, z) each point range [-1, 1]
-                let p = this.vertices[i];
-                
-                // Homogeneous coords (x, y, z, w=1)
-                p = new Vec4(this.vertices[i].x, this.vertices[i].y, this.vertices[i].z, 1);
-
-                // ======== World space ========
-                // Transform local coords to world-space coords.
-                
-                let modelMatrix = this.TRS;
-                let worldPoint = Matrix4x4VectorMult(modelMatrix, p);
-                
-                // ====== View space ========
-                // (Camera space, Eye space). Transform world coordinates to view coordinates.
-                //let viewMatrix = camera.TRInverse;
-                
-                // ======== Screen space ==========
-                // Project to screen space (image space) 
-
-                // let weakPerspProjMatrix = [
-                //     [1, 0, 0, 0],
-                //     [0, 1, 0, 0],
-                //     [0, 0, 1, 0],
-                //     [0, 0, 1, 0]
-                // ];
-
-                let perspectiveProjectionMatrix = [
-                    [1.0/Math.tan(fov/2), 0, 0, 0],
-                    [0, 1.0/Math.tan(fov/2), 0, 0],
-                    [0, 0, 1, 0],
-                    [0, 0, 1, 0]
-                ];
-
-                worldPoint.w /= worldPoint.w;
-                let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, worldPoint);
-                perspPoint = VectorScale(perspPoint, this.scale.x);
-               
-                strokeWeight(0);
-                point(perspPoint.x, perspPoint.y);
-                this.projVertices[i] = perspPoint;
-                //console.log("Projected: "+p.ToString());
-            }
-        }
-
-        drawTriangles() {
-            // Draw Triangles
-            for (let t = 0; t < this.triangles.length; t++) {
-                strokeWeight(2);
-                let triPoints = this.triangles[t];
-                let p1 = triPoints[0];
-                let p2 = triPoints[1];
-                let p3 = triPoints[2];
-            
-                //if (this.position.z < 3) {
-                    line(p1.x, p1.y, 0, p2.x, p2.y, 0);
-                    line(p2.x, p2.y, 0, p3.x, p3.y, 0);
-                    line(p3.x, p3.y, 0, p1.x, p1.y, 0);
-               // }
-            }
-        }
-
-        DrawMesh() {
-            this.transformVertices();
-            this.drawTriangles();
-        }
-    }
-
-
-    
     var angle = (Math.PI / 4) * 0.0005;
-    var cube = new CubeMesh(20);
+    // var cube = new CubeMesh(20);
     var cube2 = new CubeMesh(50);
     var cube3 = new CubeMesh(100);
-
+   
     function setup() {
         createCanvas(screenWidth, screenWidth, WEBGL);
-        cube.position = new Vec3(0,0,-10);
+        cube.position = new Vec3(0,0,0);
         cube.scale = new Vec3(1, 1, 1);
         cube2.scale = new Vec3(80, 80, 80);
         cube2.position = new Vec3(0,0,0);
-    }
+        console.log(camera.rotation);
+        console.log(cube.rotation);
 
+        camera.position.z = 10;
+    }
+    
     function draw() {
         background(0);
         rectMode(CENTER);
         stroke(255);
         strokeWeight(16);
-
-        
-        
-       // cube.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube.rotation);
-        cube2.rotation = YPR(0,0,0); //MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube2.rotation);
+         //scube.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube.rotation);
+        //cube2.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube2.rotation);
        
   
         cube.DrawMesh();
@@ -520,53 +88,81 @@
     }
 
     var moveSpeed = 2;
-    window.onkeydown = function(e) {
+    window.onkeypress = function(e) {
+
+        //----------Camera Controls-------
+        let move = new Vec3();
         // console.log(e);
         if (e.key == 'w') {
-            let dir = (VectorScale(forward, moveSpeed));
-            cube.position.z += dir.z;
-            cube2.position.z += dir.z;
-
+            move = VectorScale(camera.forward, moveSpeed);
         }
         if (e.key == 's') {
-            let dir = (VectorScale(back, moveSpeed));
-            cube.position.z += dir.z;
-            cube2.position.z += dir.z;
+            move = VectorScale(camera.back, moveSpeed);
         }
         if (e.key == 'a') {
-            let dir = (VectorScale(left, moveSpeed));
-            cube.position.x += dir.x;
-            cube2.position.x += dir.x;
+            move = VectorScale(camera.left, moveSpeed);
         }
         if (e.key == 'd') {
-            let dir = (VectorScale(right, moveSpeed));
-            cube.position.x += dir.x;
-            cube2.position.x += dir.x;
+            move = VectorScale(camera.right, moveSpeed);
         }
-        if (e.key == 'r') {
-            let dir = (VectorScale(up, moveSpeed));
-            cube.position.y += dir.y;
-        }
+       
+        camera.position = VectorSum(camera.position, move);
+
         if (e.key == 'q') {
-            let dir = (VectorScale(down, moveSpeed));
-            cube.position.y += dir.y;
+            camera.rotation = MatrixMultiply(camera.rotation, RotZ(-PI/90));
         }
-        if (e.key == 'p') {
-            console.log(camera.position.ToString());
-            //console.log(t.position.ToString());
+        else if (e.key == 'e') {
+            camera.rotation = MatrixMultiply(camera.rotation, RotZ(PI/90));
         }
 
+        // ---------------- FOV controls ------------------
         if (e.key == ".")
         {
-            fov *= 1.5;
+            fov += (5*PI/180);
+            console.log("FOV: "+(fov * 180 / Math.PI));
+
         }
         if (e.key == ",")
         {
-            fov /= 1.5;
+            fov -= (5*PI/180);
+            console.log("FOV: "+(fov * 180 / Math.PI));
         }
-        //console.log("global: " + cube.position.ToString());
 
+        // Block Controls
+        if (e.key == '8') {
+            //cube.position = VectorSum(cube.position, up);
+            cube.position = VectorSum(cube.position, up);
+        }
+        else if (e.key == '2') {
+            //cube.position = VectorSum(cube.position, up);
+            cube.position = VectorSum(cube.position, down);
+        }
+        else if (e.key == '4') {
+            //cube.position = VectorSum(cube.position, up);
+            cube.position = VectorSum(cube.position, left);
+        }
+        else if (e.key == '6') {
+            //cube.position = VectorSum(cube.position, up);
+            cube.position = VectorSum(cube.position, right);
+        }
     };
+
+    let prevMouseX = 0;
+    let prevMouseY = 0;
+    let deltaMouseX = 0;
+    let deltaMouseY = 0;
+
+    onmousemove = function() {
+        deltaMouseX = mouseX - prevMouseX;
+        deltaMouseY = mouseY - prevMouseY;
+        prevMouseX = mouseX;
+        prevMouseY = mouseY;
+        camera.rotation = MatrixMultiply(camera.rotation, YPR(0.01*deltaMouseY, .008 * -deltaMouseX, 0));
+        let local = camera.localPosition;
+        console.log("Camera local pos:"+local.ToString());
+        console.log("Camera pos:"+camera.position.ToString());
+        console.log("Cube pos:"+cube.position.ToString());
+    }
 </script>
 
 </html>
