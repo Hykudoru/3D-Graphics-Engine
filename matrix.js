@@ -137,6 +137,25 @@ class Matrix4x4
         return vectorSum;
     }
 
+    function VectorSub(vec1, vec2) {
+        let vectorSum = new Vec3((vec1.x - vec2.x), (vec1.y - vec2.y), (vec1.z - vec2.z));
+        return vectorSum;
+    }
+
+    function Magnitude(vec) {
+        return Math.sqrt((vec.x*vec.x) + (vec.y*vec.y) + (vec.z*vec.z));
+    }
+
+    function Normalized(vec) {
+        mag = Magnitude(vec);
+        vec.x /= mag;
+        vec.y /= mag;
+        vec.z /= mag;
+        return vec;
+    }
+
+
+
     function DotProduct(vecA, vecB) {
         return (vecA.x * vecB.x) + (vecA.y * vecB.y) + (vecA.z * vecB.z);
     }

@@ -65,7 +65,7 @@
     function setup() {
         createCanvas(screenWidth, screenWidth, WEBGL);
         cube.position = new Vec3(0,0,0);
-        cube.scale = new Vec3(1, 1, 1);
+        cube.scale = new Vec3(10, 10, 10);
         cube2.scale = new Vec3(80, 80, 80);
         cube2.position = new Vec3(0,0,0);
         console.log(camera.rotation);
@@ -159,6 +159,8 @@
         prevMouseY = mouseY;
         camera.rotation = MatrixMultiply(camera.rotation, YPR(0.01*deltaMouseY, .008 * -deltaMouseX, 0));
         let local = camera.localPosition;
+        console.log(camera.back.ToString());
+
         console.log("Camera local pos:"+local.ToString());
         console.log("Camera pos:"+camera.position.ToString());
         console.log("Cube pos:"+cube.position.ToString());

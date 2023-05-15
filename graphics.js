@@ -180,7 +180,7 @@
                 // Project to screen space (image space) 
                 let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, cameraSpacePoint);
                 
-                perspPoint = VectorScale(perspPoint, 100);//this.scale.x);
+                perspPoint = VectorScale(perspPoint, 100);
                
                 this.projVertices[i] = perspPoint;
             }
@@ -194,8 +194,11 @@
                 let p1 = triPoints[0];
                 let p2 = triPoints[1];
                 let p3 = triPoints[2];
-            
-                if (this.position.z < 3) {
+                let dir = VectorSub(this.position, camera.position);
+                dir = Normalized(dir);
+                let dot = DotProduct(dir, camera.forward);
+                console.log(-dot < 0);
+                if (-dot < 0) {
                     line(p1.x, p1.y, 0, p2.x, p2.y, 0);
                     line(p2.x, p2.y, 0, p3.x, p3.y, 0);
                     line(p3.x, p3.y, 0, p1.x, p1.y, 0);
