@@ -13,8 +13,8 @@
         [0, 0, 0]
     ];
 
-    let screenWidth = 700;//screen.width - 20;
-    let screenHeight = 700; //screen.height - 20; //screen.height;// - 30;
+    let screenWidth = 800;//screen.width - 20;
+    let screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
     let worldScale = .5;
     var fov = 60*Math.PI/180.0;
     let perspectiveProjectionMatrix = [

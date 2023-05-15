@@ -23,7 +23,6 @@
 
         h1 {
             text-align: center;
-            padding: 20px;
         }
         table, th, td {
             border: 1px solid black;
@@ -33,7 +32,7 @@
 </head>
 
 <body>
-    <h1 id="title">3D Graphics Engine</h1>
+    <!--
     <table id="local">
         <th>Local space</th>
         <tr>
@@ -47,8 +46,10 @@
             <td>0</td>
             <td>1</td>
         </tr>
-    </table>
+    </table>-->
+    <h1 id="title">3D Graphics Engine</h1>
     <script src="sketch.js"></script>
+    
 </body>
 <script>
     "use strict";
@@ -57,18 +58,15 @@
 
 
     var angle = (Math.PI / 4) * 0.0005;
-    
-    var meshes = [
-        new CubeMesh(1),
-        new CubeMesh(10),
-        new CubeMesh(100)
-    ];
    
     function setup() {
         createCanvas(screenWidth, screenHeight, WEBGL);
-        meshes[0].position = new Vec3(0,0,0);
-        meshes[1].position = new Vec3(0,0,0);
-        meshes[2].position = new Vec3(0,0,-200);
+        var smallCube = new CubeMesh(1);
+        var mediumCube = new CubeMesh(10);
+        var largeCube = new CubeMesh(100);
+        smallCube.position = new Vec3(0,0,0);
+        mediumCube.position = new Vec3(0,0,0);
+        largeCube.position = new Vec3(0,0,-200);
         camera.position.z = 0;
     }
     
@@ -146,7 +144,9 @@
             //cube.position = VectorSum(cube.position, up);
             cube.position = VectorSum(cube.position, right);
         }
-
+        
+        
+        //--------Spawn---------
         if (e.key === '`') {
             let c = new CubeMesh(1);
             c.position = VectorSum(camera.position, VectorScale(camera.forward, 10));
@@ -170,7 +170,7 @@
 
         console.log("Camera local pos:"+local.ToString());
         console.log("Camera pos:"+camera.position.ToString());
-    }
+    };
 </script>
 
 </html>
