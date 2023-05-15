@@ -54,20 +54,21 @@
     "use strict";
     let min = 340;
     let max = 640;
-    let screenWidth = 800;//screen.width - 20;
-    let screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
+
 
     var angle = (Math.PI / 4) * 0.0005;
     
-    var cube = new CubeMesh(1);
-    var cube2 = new CubeMesh(10);
-    var cube3 = new CubeMesh(100);
+    var meshes = [
+        new CubeMesh(1),
+        new CubeMesh(10),
+        new CubeMesh(100)
+    ];
    
     function setup() {
-        createCanvas(screenWidth, screenWidth, WEBGL);
-        cube.position = new Vec3(0,0,-200);
-        cube2.position = new Vec3(0,0,-200);
-        cube3.position = new Vec3(0,0,-200);
+        createCanvas(screenWidth, screenHeight, WEBGL);
+        meshes[0].position = new Vec3(0,0,0);
+        meshes[1].position = new Vec3(0,0,0);
+        meshes[2].position = new Vec3(0,0,-200);
         camera.position.z = 0;
     }
     
@@ -76,13 +77,12 @@
         rectMode(CENTER);
         stroke(255);
         strokeWeight(16);
-        cube2.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), cube2.rotation);
+        //meshes[1].rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), meshes[1].rotation);
         //cube2.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube2.rotation);
-       
-  
-        cube.DrawMesh();
-        cube2.DrawMesh();
-        cube3.DrawMesh();
+
+        Mesh.meshes.forEach(mesh => {
+            mesh.DrawMesh();
+        });
     }
 
     var moveSpeed = 3;
@@ -146,6 +146,12 @@
             //cube.position = VectorSum(cube.position, up);
             cube.position = VectorSum(cube.position, right);
         }
+
+        if (e.key === '`') {
+            let c = new CubeMesh(1);
+            c.position = VectorSum(camera.position, VectorScale(camera.forward, 10));
+            console.log(c.position.ToString());
+        }
     };
 
     let prevMouseX = 0;
@@ -158,13 +164,12 @@
         deltaMouseY = mouseY - prevMouseY;
         prevMouseX = mouseX;
         prevMouseY = mouseY;
-        camera.rotation = MatrixMultiply(camera.rotation, YPR(0.01*deltaMouseY, .01 * -deltaMouseX, 0));
+        camera.rotation = MatrixMultiply(camera.rotation, YPR(0.008*deltaMouseY, .008 * -deltaMouseX, 0));
         let local = camera.localPosition;
         console.log(camera.back.ToString());
 
         console.log("Camera local pos:"+local.ToString());
         console.log("Camera pos:"+camera.position.ToString());
-        console.log("Cube pos:"+cube.position.ToString());
     }
 </script>
 

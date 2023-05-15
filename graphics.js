@@ -13,8 +13,10 @@
         [0, 0, 0]
     ];
 
-    var worldScale = 100;
-    var fov = 15*Math.PI/180.0;
+    let screenWidth = 700;//screen.width - 20;
+    let screenHeight = 700; //screen.height - 20; //screen.height;// - 30;
+    let worldScale = .5;
+    var fov = 60*Math.PI/180.0;
     let perspectiveProjectionMatrix = [
         [1.0/Math.tan(fov/2), 0, 0, 0],
         [0, 1.0/Math.tan(fov/2), 0, 0],
@@ -119,13 +121,6 @@
 
         get TR() {
             return MatrixMult4x4(this.translationMatrix4x4, this.rotationMatrix4x4);
-
-            // return [
-            //         [this.rotation[0][0], this.rotation[0][1], this.rotation[0][2],  this.position.x],
-            //         [this.rotation[1][0], this.rotation[1][1], this.rotation[1][2],  this.position.y],
-            //         [this.rotation[2][0], this.rotation[2][1], this.rotation[2][2],  this.position.z],
-            //         [       0,                      0,                  0,          1]
-            //     ];
         }
 
         get TRInverse() {
@@ -139,49 +134,23 @@
     }
 
     let camera = new Transform();
-
-    class CubeMesh extends Transform 
+    class Mesh extends Transform
     {
-        // Local Space (Object Space)
-        vertices = [
-            { x: -1, y: 1, z: 1 },
-            { x: -1, y: -1, z: 1 },
-            { x: 1, y: -1, z: 1 },
-            { x: 1, y: 1, z: 1 },
-            //forward
-            { x: -1, y: 1, z: -1 },
-            { x: -1, y: -1, z: -1 },
-            { x: 1, y: -1, z: -1 },
-            { x: 1, y: 1, z: -1 }
-        ];
-
+        static meshes = [];
+        static #meshCount = 0;
+        vertices = [];
         projVertices = [];
 
-        get triangles() {
-            let triangles = [
-                //south
-                [this.projVertices[0], this.projVertices[1], this.projVertices[2]],
-                [this.projVertices[0], this.projVertices[2], this.projVertices[3]],
-                //north
-                [this.projVertices[7], this.projVertices[6], this.projVertices[5]],
-                [this.projVertices[7], this.projVertices[5], this.projVertices[4]],
-                //right
-                [this.projVertices[3], this.projVertices[2], this.projVertices[6]],
-                [this.projVertices[3], this.projVertices[6], this.projVertices[7]],
-                //left
-                [this.projVertices[4], this.projVertices[5], this.projVertices[1]],
-                [this.projVertices[4], this.projVertices[1], this.projVertices[0]],
-                //top
-                [this.projVertices[1], this.projVertices[5], this.projVertices[6]],
-                [this.projVertices[1], this.projVertices[6], this.projVertices[2]],
-                //bottom
-                [this.projVertices[3], this.projVertices[7], this.projVertices[4]],
-                [this.projVertices[3], this.projVertices[4], this.projVertices[0]],
-            ];
+        constructor(scale = 1) {
+            super(scale);
+            Mesh.meshes[Mesh.#meshCount++] = this;
+        }
 
+        get triangles() {
+            let triangles = [];
             return triangles;
         }
-        
+
         transformVertices() {
             //Transform
             for (let i = 0; i < this.vertices.length; i++) {
@@ -206,8 +175,9 @@
                 // ======== Screen space ==========
                 // Project to screen space (image space) 
                 let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, cameraSpacePoint);
-                perspPoint = VectorScale(perspPoint, worldScale);
-                
+                //perspPoint = VectorScale(perspPoint, worldScale);
+                perspPoint.x *= worldScale*screenWidth;
+                perspPoint.y *= worldScale*screenHeight;
                 this.projVertices[i] = perspPoint;
             }
         }
@@ -235,4 +205,51 @@
             this.transformVertices();
             this.drawTriangles();
         }
+    }
+
+    class CubeMesh extends Mesh
+    {
+        // Local Space (Object Space)
+        vertices = [
+            { x: -1, y: 1, z: 1 },
+            { x: -1, y: -1, z: 1 },
+            { x: 1, y: -1, z: 1 },
+            { x: 1, y: 1, z: 1 },
+            //forward
+            { x: -1, y: 1, z: -1 },
+            { x: -1, y: -1, z: -1 },
+            { x: 1, y: -1, z: -1 },
+            { x: 1, y: 1, z: -1 }
+        ];
+
+        projVertices = [];
+        constructor(scale = 1) {
+            super(scale);
+        }
+        get triangles() {
+            let triangles = [
+                //south
+                [this.projVertices[0], this.projVertices[1], this.projVertices[2]],
+                [this.projVertices[0], this.projVertices[2], this.projVertices[3]],
+                //north
+                [this.projVertices[7], this.projVertices[6], this.projVertices[5]],
+                [this.projVertices[7], this.projVertices[5], this.projVertices[4]],
+                //right
+                [this.projVertices[3], this.projVertices[2], this.projVertices[6]],
+                [this.projVertices[3], this.projVertices[6], this.projVertices[7]],
+                //left
+                [this.projVertices[4], this.projVertices[5], this.projVertices[1]],
+                [this.projVertices[4], this.projVertices[1], this.projVertices[0]],
+                //top
+                [this.projVertices[1], this.projVertices[5], this.projVertices[6]],
+                [this.projVertices[1], this.projVertices[6], this.projVertices[2]],
+                //bottom
+                [this.projVertices[3], this.projVertices[7], this.projVertices[4]],
+                [this.projVertices[3], this.projVertices[4], this.projVertices[0]],
+            ];
+
+            return triangles;
+        }
+        
+       
     }
