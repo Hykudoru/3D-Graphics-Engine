@@ -1,4 +1,5 @@
     //-----------GRAPHICS---------------
+    
     var forward = { x: 0, y: 0, z: -1 };
     var back = { x: 0, y: 0, z: 1 };
     var right = { x: 1, y: 0, z: 0 };
@@ -11,7 +12,8 @@
         [0, 1, 0],
         [0, 0, 0]
     ];
-    
+
+    var worldScale = 100;
     var fov = 15*Math.PI/180.0;
     let perspectiveProjectionMatrix = [
         [1.0/Math.tan(fov/2), 0, 0, 0],
@@ -204,9 +206,8 @@
                 // ======== Screen space ==========
                 // Project to screen space (image space) 
                 let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, cameraSpacePoint);
+                perspPoint = VectorScale(perspPoint, worldScale);
                 
-                perspPoint = VectorScale(perspPoint, 100);
-               
                 this.projVertices[i] = perspPoint;
             }
         }
@@ -222,7 +223,6 @@
                 let dir = VectorSub(this.position, camera.position);
                 dir = Normalized(dir);
                 let dot = DotProduct(dir, camera.forward);
-                console.log(-dot < 0);
                 if (-dot < 0) {
                     line(p1.x, p1.y, 0, p2.x, p2.y, 0);
                     line(p2.x, p2.y, 0, p3.x, p3.y, 0);
@@ -236,5 +236,3 @@
             this.drawTriangles();
         }
     }
-
-    var cube = new CubeMesh(20);

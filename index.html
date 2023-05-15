@@ -58,20 +58,17 @@
     let screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
 
     var angle = (Math.PI / 4) * 0.0005;
-    // var cube = new CubeMesh(20);
-    var cube2 = new CubeMesh(50);
+    
+    var cube = new CubeMesh(1);
+    var cube2 = new CubeMesh(10);
     var cube3 = new CubeMesh(100);
    
     function setup() {
         createCanvas(screenWidth, screenWidth, WEBGL);
-        cube.position = new Vec3(0,0,0);
-        cube.scale = new Vec3(10, 10, 10);
-        cube2.scale = new Vec3(80, 80, 80);
-        cube2.position = new Vec3(0,0,0);
-        console.log(camera.rotation);
-        console.log(cube.rotation);
-
-        camera.position.z = 10;
+        cube.position = new Vec3(0,0,-200);
+        cube2.position = new Vec3(0,0,-200);
+        cube3.position = new Vec3(0,0,-200);
+        camera.position.z = 0;
     }
     
     function draw() {
@@ -79,15 +76,16 @@
         rectMode(CENTER);
         stroke(255);
         strokeWeight(16);
-         //scube.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube.rotation);
+        cube2.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), cube2.rotation);
         //cube2.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube2.rotation);
        
   
         cube.DrawMesh();
         cube2.DrawMesh();
+        cube3.DrawMesh();
     }
 
-    var moveSpeed = 2;
+    var moveSpeed = 3;
     window.onkeypress = function(e) {
 
         //----------Camera Controls-------
@@ -160,7 +158,7 @@
         deltaMouseY = mouseY - prevMouseY;
         prevMouseX = mouseX;
         prevMouseY = mouseY;
-        camera.rotation = MatrixMultiply(camera.rotation, YPR(0.01*deltaMouseY, .008 * -deltaMouseX, 0));
+        camera.rotation = MatrixMultiply(camera.rotation, YPR(0.01*deltaMouseY, .01 * -deltaMouseX, 0));
         let local = camera.localPosition;
         console.log(camera.back.ToString());
 
