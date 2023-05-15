@@ -11,14 +11,39 @@
         [0, 1, 0],
         [0, 0, 0]
     ];
-
+    
     var fov = 15*Math.PI/180.0;
     let perspectiveProjectionMatrix = [
         [1.0/Math.tan(fov/2), 0, 0, 0],
         [0, 1.0/Math.tan(fov/2), 0, 0],
         [0, 0, 1, 0],
         [0, 0, -1, 0]
-    ];
+    ]; 
+
+    function ToDeg(rad) {
+        return rad * 180.0/PI;
+    }
+    
+    function ToRad(deg) {
+        return deg * PI/180.0;
+    }
+
+    function FOV(deg) {
+        PerspectiveMatrix(deg);
+    }
+
+    function PerspectiveMatrix(degFOV)
+    {  
+        fov = ToRad(degFOV);
+        perspectiveProjectionMatrix = [
+            [1.0/Math.tan(fov/2), 0, 0, 0],
+            [0, 1.0/Math.tan(fov/2), 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, -1, 0]
+        ]; 
+        
+        return perspectiveProjectionMatrix;
+    }
 
     class Transform
     {

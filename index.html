@@ -105,6 +105,10 @@
         if (e.key == 'd') {
             move = VectorScale(camera.right, moveSpeed);
         }
+
+        if (e.key == ' ') {
+            move = VectorScale(camera.up, moveSpeed);
+        }
        
         camera.position = VectorSum(camera.position, move);
 
@@ -118,14 +122,13 @@
         // ---------------- FOV controls ------------------
         if (e.key == ".")
         {
-            fov += (5*PI/180);
-            console.log("FOV: "+(fov * 180 / Math.PI));
-
+            FOV(ToDeg(fov) + 5);
+            console.log("FOV: "+ToDeg(fov));
         }
         if (e.key == ",")
         {
-            fov -= (5*PI/180);
-            console.log("FOV: "+(fov * 180 / Math.PI));
+            FOV(ToDeg(fov) - 5);
+            console.log("FOV: "+ToDeg(fov));
         }
 
         // Block Controls
