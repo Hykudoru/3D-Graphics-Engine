@@ -163,6 +163,7 @@
         }
 
         transformVertices() {
+            let viewVertices = [];
             //Transform
             for (let i = 0; i < this.vertices.length; i++) {
                 
@@ -183,8 +184,30 @@
                 let worldToViewMatrix = camera.TRInverse;
                 let cameraSpacePoint = Matrix4x4VectorMult(worldToViewMatrix, worldPoint);
                 
+            //     viewVertices[i] = cameraSpacePoint;
+            // }
+
+            // let vertsRendering = [];
+            // let vertsRenderingIndex = 0;
+            // // Calculate Normals
+            // let tris = this.triangles(viewVertices);
+            // for (let i = 0; i < tris.length; i++) {
+            //     const tri = tris[i];
+            //     let b = VectorSub(tri[1], tri[0]);
+            //     let a = VectorSub(tri[2], tri[0]);
+            //     let ab = CrossProduct(a, b);
+            //     ab = Normalized(ab);
+            //     line(this.position.x, this.position.y, ab.x, ab.y);
+            //     console.log("u * camForward:"+DotProduct(ab, camera.forward));
+            //     vertsRendering[vertsRenderingIndex++] = tri[0];
+            //     vertsRendering[vertsRenderingIndex++] = tri[1];
+            //     vertsRendering[vertsRenderingIndex++] = tri[2];
+            // }
+
+            // for (let i = 0; i < vertsRendering.length; i++) {
                 // ======== Screen space ==========
                 // Project to screen space (image space) 
+                // let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, vertsRendering[i]);
                 let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, cameraSpacePoint);
                 perspPoint.x *= worldScale*screenWidth;
                 perspPoint.y *= worldScale*screenHeight;
@@ -260,7 +283,7 @@
                 [verts[3], verts[7], verts[4]],
                 [verts[3], verts[4], verts[0]],
             ];
-
+            
             return triangles;
         }
     }
