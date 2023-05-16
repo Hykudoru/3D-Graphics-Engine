@@ -51,6 +51,9 @@
 
     class Transform
     {
+        static transforms = [];
+        static #transformCount = 0;
+
         scale = new Vec3(1, 1, 1);
         position = new Vec3(0, 0, 0);
         rotation = [
@@ -65,16 +68,15 @@
         get up() {return MatrixVectorMultiply(this.rotation, up);}
         get down() {return MatrixVectorMultiply(this.rotation, down);}
         get localPosition() {return Matrix4x4VectorMult(this.translationMatrix4x4Inverse, new Vec4(this.position.x, this.position.y, this.position.z, 1));}
-        // constructor(position = new Vec3(0, 0, 0), rotationEuler = new Vec3(0, 0, 0), scale = new Vec3(1, 1, 1))
-        // {
-        //     this.scale = scale;
-        //     this.position = position;
-        //     this.rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
-        // }
-        constructor(scale = 1) {
+        
+        constructor(scale = 1, position = new Vec3(0, 0, 0), rotationEuler = new Vec3(0, 0, 0))
+        {
             this.scale.x = scale;
             this.scale.y = scale;
             this.scale.z = scale;
+            this.position = position;
+            this.rotation = YPR(rotationEuler.x, rotationEuler.y, rotationEuler.z);
+            Transform.transforms[Transform.#transformCount++] = this;
         }
 
         get scalingMatrix4x4() 
@@ -130,10 +132,18 @@
 
     class Camera extends Transform
     {
-
+        static cameras = [];
+        static #cameraCount = 0;
+        
+        constructor(scale = 1, position = new Vec3(0, 0, 0), rotationEuler = new Vec3(0, 0, 0))
+        {
+            super(scale, position, rotationEuler);
+            Camera.cameras[Camera.#cameraCount++] = this;
+        }
     }
 
-    let camera = new Transform();
+    let camera = new Camera();
+
     class Mesh extends Transform
     {
         static meshes = [];
@@ -141,8 +151,9 @@
         vertices = [];
         projVertices = [];
 
-        constructor(scale = 1) {
-            super(scale);
+        constructor(scale = 1, position = new Vec3(0, 0, 0), rotationEuler = new Vec3(0, 0, 0)) 
+        {
+            super(scale, position, rotationEuler);
             Mesh.meshes[Mesh.#meshCount++] = this;
         }
 
@@ -223,8 +234,9 @@
         ];
 
         projVertices = [];
-        constructor(scale = 1) {
-            super(scale);
+        constructor(scale = 1, position = new Vec3(0, 0, 0), rotationEuler = new Vec3(0, 0, 0))
+        {
+            super(scale, position, rotationEuler);
         }
         get triangles() {
             let triangles = [
