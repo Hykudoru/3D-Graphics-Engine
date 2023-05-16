@@ -157,7 +157,7 @@
             Mesh.meshes[Mesh.#meshCount++] = this;
         }
 
-        get triangles() {
+        triangles(verts) {
             let triangles = [];
             return triangles;
         }
@@ -186,18 +186,19 @@
                 // ======== Screen space ==========
                 // Project to screen space (image space) 
                 let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, cameraSpacePoint);
-                //perspPoint = VectorScale(perspPoint, worldScale);
                 perspPoint.x *= worldScale*screenWidth;
                 perspPoint.y *= worldScale*screenHeight;
+
                 this.projVertices[i] = perspPoint;
             }
         }
 
         drawTriangles() {
+            strokeWeight(2);
+            let projTriangles = this.triangles(this.projVertices);
             // Draw Triangles
-            for (let t = 0; t < this.triangles.length; t++) {
-                strokeWeight(2);
-                let triPoints = this.triangles[t];
+            for (let t = 0; t < projTriangles.length; t++) {    
+                let triPoints = projTriangles[t];
                 let p1 = triPoints[0];
                 let p2 = triPoints[1];
                 let p3 = triPoints[2];
@@ -220,48 +221,46 @@
 
     class CubeMesh extends Mesh
     {
-        // Local Space (Object Space)
-        vertices = [
-            { x: -1, y: 1, z: 1 },
-            { x: -1, y: -1, z: 1 },
-            { x: 1, y: -1, z: 1 },
-            { x: 1, y: 1, z: 1 },
-            //forward
-            { x: -1, y: 1, z: -1 },
-            { x: -1, y: -1, z: -1 },
-            { x: 1, y: -1, z: -1 },
-            { x: 1, y: 1, z: -1 }
-        ];
-
-        projVertices = [];
         constructor(scale = 1, position = new Vec3(0, 0, 0), rotationEuler = new Vec3(0, 0, 0))
         {
             super(scale, position, rotationEuler);
+
+            // Local Space (Object Space)
+            this.vertices = [
+                { x: -1, y: 1, z: 1 },
+                { x: -1, y: -1, z: 1 },
+                { x: 1, y: -1, z: 1 },
+                { x: 1, y: 1, z: 1 },
+                //forward
+                { x: -1, y: 1, z: -1 },
+                { x: -1, y: -1, z: -1 },
+                { x: 1, y: -1, z: -1 },
+                { x: 1, y: 1, z: -1 }
+            ];
         }
-        get triangles() {
+
+        triangles(verts) {
             let triangles = [
                 //south
-                [this.projVertices[0], this.projVertices[1], this.projVertices[2]],
-                [this.projVertices[0], this.projVertices[2], this.projVertices[3]],
+                [verts[0], verts[1], verts[2]],
+                [verts[0], verts[2], verts[3]],
                 //north
-                [this.projVertices[7], this.projVertices[6], this.projVertices[5]],
-                [this.projVertices[7], this.projVertices[5], this.projVertices[4]],
+                [verts[7], verts[6], verts[5]],
+                [verts[7], verts[5], verts[4]],
                 //right
-                [this.projVertices[3], this.projVertices[2], this.projVertices[6]],
-                [this.projVertices[3], this.projVertices[6], this.projVertices[7]],
+                [verts[3], verts[2], verts[6]],
+                [verts[3], verts[6], verts[7]],
                 //left
-                [this.projVertices[4], this.projVertices[5], this.projVertices[1]],
-                [this.projVertices[4], this.projVertices[1], this.projVertices[0]],
+                [verts[4], verts[5], verts[1]],
+                [verts[4], verts[1], verts[0]],
                 //top
-                [this.projVertices[1], this.projVertices[5], this.projVertices[6]],
-                [this.projVertices[1], this.projVertices[6], this.projVertices[2]],
+                [verts[1], verts[5], verts[6]],
+                [verts[1], verts[6], verts[2]],
                 //bottom
-                [this.projVertices[3], this.projVertices[7], this.projVertices[4]],
-                [this.projVertices[3], this.projVertices[4], this.projVertices[0]],
+                [verts[3], verts[7], verts[4]],
+                [verts[3], verts[4], verts[0]],
             ];
 
             return triangles;
         }
-        
-       
     }
