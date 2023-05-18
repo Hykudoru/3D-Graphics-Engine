@@ -157,88 +157,126 @@
             Mesh.meshes[Mesh.#meshCount++] = this;
         }
 
-        triangles(verts) {
+        get triangles() {
+            let triangles = [];
+            return triangles;
+        }
+        get projectedTriangles() {
             let triangles = [];
             return triangles;
         }
 
-        transformVertices() {
-            let viewVertices = [];
-            //Transform
-            for (let i = 0; i < this.vertices.length; i++) {
+        // --------Use this insead if you want to see through the object-------------
+        // transformVertices() {
+        //     //Transform
+        //     for (let i = 0; i < this.vertices.length; i++) {
                 
-                // local space (Object space) coords (x, y, z) each point range [-1, 1]
-                let vert = this.vertices[i];
+        //         // local space (Object space) coords (x, y, z) each point range [-1, 1]
+        //         let vert = this.vertices[i];
                 
-                // Homogeneous coords (x, y, z, w=1)
-                vert = new Vec4(this.vertices[i].x, this.vertices[i].y, this.vertices[i].z, 1);
+        //         // Homogeneous coords (x, y, z, w=1)
+        //         vert = new Vec4(this.vertices[i].x, this.vertices[i].y, this.vertices[i].z, 1);
 
-                // ======== World space ========
-                // Transform local coords to world-space coords.
+        //         // ======== World space ========
+        //         // Transform local coords to world-space coords.
                 
-                let modelToWorldMatrix = this.TRS;
-                let worldPoint = Matrix4x4VectorMult(modelToWorldMatrix, vert);
+        //         let modelToWorldMatrix = this.TRS;
+        //         let worldPoint = Matrix4x4VectorMult(modelToWorldMatrix, vert);
                 
-                // ====== View space ========
-                // (Camera space, Eye space). Transform world coordinates to view coordinates.
-                let worldToViewMatrix = camera.TRInverse;
-                let cameraSpacePoint = Matrix4x4VectorMult(worldToViewMatrix, worldPoint);
+        //         // ====== View space ========
+        //         // (Camera space, Eye space). Transform world coordinates to view coordinates.
+        //         let worldToViewMatrix = camera.TRInverse;
+        //         let cameraSpacePoint = Matrix4x4VectorMult(worldToViewMatrix, worldPoint);
                 
-            //     viewVertices[i] = cameraSpacePoint;
-            // }
+        //         // ======== Screen space ==========
+        //         // Project to screen space (image space) 
+        //         let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, cameraSpacePoint);
+        //         perspPoint.x *= worldScale*screenWidth;
+        //         perspPoint.y *= worldScale*screenHeight;
 
-            // let vertsRendering = [];
-            // let vertsRenderingIndex = 0;
-            // // Calculate Normals
-            // let tris = this.triangles(viewVertices);
-            // for (let i = 0; i < tris.length; i++) {
-            //     const tri = tris[i];
-            //     let b = VectorSub(tri[1], tri[0]);
-            //     let a = VectorSub(tri[2], tri[0]);
-            //     let ab = CrossProduct(a, b);
-            //     ab = Normalized(ab);
-            //     line(this.position.x, this.position.y, ab.x, ab.y);
-            //     console.log("u * camForward:"+DotProduct(ab, camera.forward));
-            //     vertsRendering[vertsRenderingIndex++] = tri[0];
-            //     vertsRendering[vertsRenderingIndex++] = tri[1];
-            //     vertsRendering[vertsRenderingIndex++] = tri[2];
-            // }
+        //         this.projVertices[i] = perspPoint;
+        //     }
+        // }
 
-            // for (let i = 0; i < vertsRendering.length; i++) {
-                // ======== Screen space ==========
-                // Project to screen space (image space) 
-                // let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, vertsRendering[i]);
-                let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, cameraSpacePoint);
-                perspPoint.x *= worldScale*screenWidth;
-                perspPoint.y *= worldScale*screenHeight;
-
-                this.projVertices[i] = perspPoint;
-            }
+        drawTriangle(tri = []) {
+            let p1 = tri[0];
+            let p2 = tri[1];
+            let p3 = tri[2];
+            
+            //Draw Triangle
+            line(p1.x, p1.y, 0, p2.x, p2.y, 0);
+            line(p2.x, p2.y, 0, p3.x, p3.y, 0);
+            line(p3.x, p3.y, 0, p1.x, p1.y, 0);
         }
 
-        drawTriangles() {
-            strokeWeight(2);
-            let projTriangles = this.triangles(this.projVertices);
-            // Draw Triangles
-            for (let t = 0; t < projTriangles.length; t++) {    
-                let triPoints = projTriangles[t];
-                let p1 = triPoints[0];
-                let p2 = triPoints[1];
-                let p3 = triPoints[2];
-                let dir = VectorSub(this.position, camera.position);
-                dir = Normalized(dir);
-                let dot = DotProduct(dir, camera.forward);
-                if (-dot < 0) {
-                    line(p1.x, p1.y, 0, p2.x, p2.y, 0);
-                    line(p2.x, p2.y, 0, p3.x, p3.y, 0);
-                    line(p3.x, p3.y, 0, p1.x, p1.y, 0);
-                }
+        transformTriangles() {
+            let projectedTriangles = [];
+            //Transform
+            let tris = this.triangles(this.vertices);
+            for (let i = 0; i < tris.length; i++) {
+                let camSpaceTri = [];
+                let tri = tris[i];
+                for (let j = 0; j < tri.length; j++) {
+                    // Local 3D (x,y,z)
+                    let vert = tri[j];
+                    // Homogeneous coords (x, y, z, w=1)
+                    vert = new Vec4(vert.x, vert.y, vert.z, 1);
+
+                    // ======== World space ========
+                    // Transform local coords to world-space coords.
+                    let modelToWorldMatrix = this.TRS;
+                    let worldPoint = Matrix4x4VectorMult(modelToWorldMatrix, vert);
+                   
+                    // ====== View/Cam/Eye space ========
+                    // Transform world coordinates to view coordinates.
+                    let worldToViewMatrix = camera.TRInverse;
+                    let cameraSpacePoint = Matrix4x4VectorMult(worldToViewMatrix, worldPoint);
+                    camSpaceTri[j] = cameraSpacePoint;
+                };
+
+                // Still in View/Cam/Eye space
+                let p1 = camSpaceTri[0];
+                let p2 = camSpaceTri[1];
+                let p3 = camSpaceTri[2];
+                // Calculate triangle suface Normal
+                let a = VectorSub(p2, p1);
+                let b = VectorSub(p3, p1);
+                let normal = Normalized(CrossProduct(a, b));
+                let triCenter = p1;//FIX LATER
+                //point(triCenter.x, triCenter.y);
+
+                // 1st. Check if triangle surface "could be" seen from the camera's position.
+                // 2nd. Make sure the camera can see it.
+                let dirCamToTri = Normalized(VectorSub(triCenter, camera.localPosition));
+                let camVisible = DotProduct(dirCamToTri, normal) < 0;
+                let behindCamera = DotProduct(dirCamToTri, forward) < 0;
+                if (!camVisible || behindCamera) {
+                    continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
+                } 
+
+                //Project triangle from 3D to 2D
+                let projectedTri = []
+                for (let j = 0; j < camSpaceTri.length; j++) {
+                    const cameraSpacePoint = camSpaceTri[j]; 
+                    // ======== Screen space ==========
+                    // Project to screen space (image space) 
+                    let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, cameraSpacePoint);
+                    perspPoint.x *= worldScale*screenWidth;
+                    perspPoint.y *= worldScale*screenHeight;
+                    projectedTri[j] = perspPoint;
+                };
+                projectedTriangles[i] = projectedTri;
             }
+
+            return projectedTriangles;
         }
 
         DrawMesh() {
-            this.transformVertices();
-            this.drawTriangles();
+            strokeWeight(1);
+            let projectedTriangles = this.transformTriangles();
+            projectedTriangles.forEach(tri => {
+                this.drawTriangle(tri);
+            });
         }
     }
 
@@ -283,7 +321,7 @@
                 [verts[3], verts[7], verts[4]],
                 [verts[3], verts[4], verts[0]],
             ];
-            
+
             return triangles;
         }
     }
