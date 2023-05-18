@@ -157,12 +157,9 @@
             Mesh.meshes[Mesh.#meshCount++] = this;
         }
 
-        get triangles() {
-            let triangles = [];
-            return triangles;
-        }
-        get projectedTriangles() {
-            let triangles = [];
+        triangles(verts) 
+        {
+            triangles = [];
             return triangles;
         }
 
@@ -272,7 +269,7 @@
         }
 
         DrawMesh() {
-            strokeWeight(1);
+            strokeWeight(2);
             let projectedTriangles = this.transformTriangles();
             projectedTriangles.forEach(tri => {
                 this.drawTriangle(tri);
