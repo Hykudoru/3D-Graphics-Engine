@@ -22,7 +22,10 @@
         [0, 1.0/Math.tan(fov/2), 0, 0],
         [0, 0, 1, 0],
         [0, 0, -1, 0]
-    ]; 
+    ];
+
+    let CULLING = true;
+    let DEBUG_NORMALS = false;
 
     function ToDeg(rad) {
         return rad * 180.0/PI;
@@ -233,27 +236,41 @@
                     let cameraSpacePoint = Matrix4x4VectorMult(worldToViewMatrix, worldPoint);
                     camSpaceTri[j] = cameraSpacePoint;
                 };
-
+                
                 // Still in View/Cam/Eye space
+                
                 let p1 = camSpaceTri[0];
                 let p2 = camSpaceTri[1];
                 let p3 = camSpaceTri[2];
+                let centroid = new Vec3((p1.x+p2.x+p3.x)/3.0, (p1.y+p2.y+p3.y)/3.0, (p1.z+p2.z+p3.z)/3.0);
+                let behindCamera = DotProduct(Normalized(centroid), forward) <= 0;
+                    
+                if (behindCamera) {
+                    continue; // Skip triangle if it's out of cam view.
+                } 
+                
                 // Calculate triangle suface Normal
                 let a = VectorSub(p2, p1);
                 let b = VectorSub(p3, p1);
                 let normal = Normalized(CrossProduct(a, b));
-                let triCenter = p1;//FIX LATER
-                //point(triCenter.x, triCenter.y);
 
-                // 1st. Check if triangle surface "could be" seen from the camera's position.
-                // 2nd. Make sure the camera can see it.
-                let dirCamToTri = Normalized(VectorSub(triCenter, camera.localPosition));
-                let camVisible = DotProduct(dirCamToTri, normal) < 0;
-                let behindCamera = DotProduct(dirCamToTri, forward) < 0;
-                if (!camVisible || behindCamera) {
-                    continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
-                } 
+                //-------------------Normal/Culling------------------------
+                if (CULLING)
+                {
+                    // 1st. Calculate triangle surface normal.
+                    // 2st. Check if triangle surface can be seen from the camera's position.
 
+                    // Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
+                    let normalizedFromCamPos = Normalized(centroid);
+                    let camVisible = DotProduct(normalizedFromCamPos, normal) <= 0;
+                    
+                    if (!camVisible) {
+                        continue;// Skip triangle if it's out of cam view or it's part of the other side of the mesh.
+                    } 
+                }
+
+                // ====== Screen space ========
+                
                 //Project triangle from 3D to 2D
                 let projectedTri = []
                 for (let j = 0; j < camSpaceTri.length; j++) {
@@ -264,8 +281,22 @@
                     perspPoint.x *= worldScale*screenWidth;
                     perspPoint.y *= worldScale*screenHeight;
                     projectedTri[j] = perspPoint;
-                };
+                }; 
+                
                 projectedTriangles[i] = projectedTri;
+
+                if (DEBUG_NORMALS)
+                {
+                    //---------Draw triangle centroid and normal-----------
+                    let projCentroidToNormal = Matrix4x4VectorMult(perspectiveProjectionMatrix, Vec4.ToVec4(VectorSum(centroid, normal)));
+                    let projCentroid = Matrix4x4VectorMult(perspectiveProjectionMatrix, Vec4.ToVec4(centroid));
+                    projCentroidToNormal.x *= worldScale*screenWidth;
+                    projCentroidToNormal.y *= worldScale*screenHeight;
+                    projCentroid.x *= worldScale*screenWidth;
+                    projCentroid.y *= worldScale*screenHeight;
+                    point(projCentroid.x, projCentroid.y, 0);
+                    line(projCentroid.x, projCentroid.y, 0, projCentroidToNormal.x, projCentroidToNormal.y, 0);
+                }
             }
 
             return projectedTriangles;

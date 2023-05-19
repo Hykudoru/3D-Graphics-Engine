@@ -47,9 +47,10 @@
     var angle = (Math.PI / 4) * 0.0005;
 
     var moveDir = new Vec3();
-    var moveSpeed = 3;
+    var moveSpeed = 1;
+    var accel = 0.5;
     var velocity = new Vec3(0,0,0);
-    var isKinematic = false;
+    var isKinematic = true;
     var dampenersActive = true;
 
     function setup() 
@@ -70,7 +71,7 @@
 
         //---------- PHYSICS Update ------------
         if (!isKinematic) {
-            velocity = VectorSum(velocity, VectorScale(moveDir, moveSpeed));
+            velocity = VectorSum(velocity, VectorScale(moveDir, accel));
             if (dampenersActive) {
                velocity = VectorScale(velocity, 0.95);
             }

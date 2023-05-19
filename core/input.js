@@ -93,5 +93,10 @@ onmousemove = function() {
 };
 
 onkeydown = function(e) {
-    e.key == 'o';
+    if(e.key == 'n') {
+        DEBUG_NORMALS = !DEBUG_NORMALS;
+    }
+    if (e.key == 'v') {
+        CULLING = !CULLING;
+    }
 }

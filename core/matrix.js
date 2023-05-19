@@ -68,6 +68,9 @@ class Vec3
         this.v[2] = z;
     }
 
+    static zero = new Vec3(0,0,0);
+    static one = new Vec3(1.0, 1.0, 1.0);
+    
     ToString() {
         let str = "";
         this.v.forEach(element => {
@@ -82,6 +85,16 @@ class Vec3
 class Vec4 extends Vec3 
 {
     get w() { return this.v[3]} set w(val) {this.v[3] = val;}
+    
+    static ToVec3(vec4)
+    {
+        return new Vec3(vec4.x, vec4.y, vec4.z);    
+    }
+
+    static ToVec4(vec3)
+    {
+        return new Vec4(vec3.x, vec3.y, vec3.z, 1);    
+    }
 
     constructor(x = 0, y = 0, z = 0, w = 1) {
         super(x, y, z);
@@ -96,6 +109,7 @@ class Matrix3x3
         [0, 1, 0],
         [0, 0, 1]
     ];
+    
     constructor(mtx3x3)
     {
         let matrix = [
@@ -132,29 +146,32 @@ class Matrix4x4
         return vec;
     }
 
-    function VectorSum(vec1, vec2) {
-        let vectorSum = new Vec3((vec1.x + vec2.x), (vec1.y + vec2.y), (vec1.z + vec2.z));
-        return vectorSum;
+    function VectorSum(a, b) {
+        let vec = new Vec3((a.x + b.x), (a.y + b.y), (a.z + b.z));
+        return vec;
     }
 
-    function VectorSub(vec1, vec2) {
-        let vectorSum = new Vec3((vec1.x - vec2.x), (vec1.y - vec2.y), (vec1.z - vec2.z));
-        return vectorSum;
+    function VectorSub(a, b) {
+        let vec = new Vec3((a.x - b.x), (a.y - b.y), (a.z - b.z));
+        return vec;
     }
 
     function Magnitude(vec) {
         return Math.sqrt((vec.x*vec.x) + (vec.y*vec.y) + (vec.z*vec.z));
     }
 
-    function Normalized(vec) {
-        mag = Magnitude(vec);
+    function Normalized(vec3) {
+        let vec = new Vec3(vec3.x, vec3.y, vec3.z);
+        let mag = Magnitude(vec);
         vec.x /= mag;
         vec.y /= mag;
         vec.z /= mag;
         return vec;
     }
 
-
+    function SqrMag(vec3) {
+        return (vec3.x*vec3.x) + (vec3.y*vec3.y) + (vec3.z*vec3.z)
+    }
 
     function DotProduct(vecA, vecB) {
         return (vecA.x * vecB.x) + (vecA.y * vecB.y) + (vecA.z * vecB.z);
