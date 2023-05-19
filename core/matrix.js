@@ -71,7 +71,7 @@ class Vec3
     ToString() {
         let str = "";
         this.v.forEach(element => {
-            str += " "+element;
+            str += " "+Math.round(element);
         });
         str += "\n\r";
 

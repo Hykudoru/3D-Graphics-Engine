@@ -13,8 +13,8 @@
         [0, 0, 0]
     ];
 
-    let screenWidth = 800;//screen.width - 20;
-    let screenHeight = 800; //screen.height - 20; //screen.height;// - 30;
+    let screenWidth = 700;//screen.width - 20;
+    let screenHeight = 700; //screen.height - 20; //screen.height;// - 30;
     let worldScale = .5;
     var fov = 60*Math.PI/180.0;
     let perspectiveProjectionMatrix = [
@@ -148,6 +148,8 @@
     {
         static meshes = [];
         static #meshCount = 0;
+        static worldTriangleCount = 0;
+        static worldTriangleDrawCount = 0;
         vertices = [];
         projVertices = [];
 
@@ -155,6 +157,7 @@
         {
             super(scale, position, rotationEuler);
             Mesh.meshes[Mesh.#meshCount++] = this;
+            Mesh.worldTriangleCount += this.triangles(this.vertices).length;
         }
 
         triangles(verts) 
@@ -273,6 +276,14 @@
             let projectedTriangles = this.transformTriangles();
             projectedTriangles.forEach(tri => {
                 this.drawTriangle(tri);
+            });
+            return projectedTriangles;
+        }
+
+        static DrawMeshes() {
+            Mesh.worldTriangleDrawCount = 0;
+            Mesh.meshes.forEach(mesh => {
+                Mesh.worldTriangleDrawCount += (mesh.DrawMesh()).length;
             });
         }
     }

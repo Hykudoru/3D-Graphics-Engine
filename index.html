@@ -9,20 +9,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.1.9/p5.js"></script>-->
     <script src="jquery-3.6.4.min.js"></script>
     <script src="p5.min.js"></script>
-    <script src="matrix.js"></script>
-    <script src="graphics.js"></script>
+    <script src="core/matrix.js"></script>
+    <script src="core/graphics.js"></script>
+    <script src="core/input.js"></script>
     <title>3D Graphics</title>
     <style>
         body {
             background-color: #1b1a1a;
             color: rgb(213, 212, 212);
-            text-align: center;
             margin: auto;
             padding: auto;
+            text-align: center;
         }
 
         h1 {
             text-align: center;
+        }
+        #debug {
+            position: fixed;
+            text-align: justify;
         }
         table, th, td {
             border: 1px solid black;
@@ -32,38 +37,23 @@
 </head>
 
 <body>
-    <!--
-    <table id="local">
-        <th>Local space</th>
-        <tr>
-            <th></th>
-            <th></th>
-            <th></th>
-        </tr>
-        <tr>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>1</td>
-        </tr>
-    </table>-->
     <h1 id="title">3D Graphics Engine</h1>
+    <div id="debug"></div>
     <script src="sketch.js"></script>
-    
 </body>
 <script>
     "use strict";
-    let min = 340;
-    let max = 640;
+    let DEBUGGING = true;
     var angle = (Math.PI / 4) * 0.0005;
-    
+
     var moveDir = new Vec3();
     var moveSpeed = 3;
     var velocity = new Vec3(0,0,0);
-    var isKinematic = true;
-    var dampenersActive = false;
+    var isKinematic = false;
+    var dampenersActive = true;
 
-    function setup() {
+    function setup() 
+    {
         createCanvas(screenWidth, screenHeight, WEBGL);
         var smallCube = new CubeMesh(1, new Vec3(0,0,-10));
         var mediumCube = new CubeMesh(10, new Vec3(0,0,-100));
@@ -71,11 +61,13 @@
         camera.position = new Vec3();
     }
     
-    function draw() {
+    function draw() 
+    {
         background(0);
         rectMode(CENTER);
         stroke(255);
         strokeWeight(16);
+
         //---------- PHYSICS Update ------------
         if (!isKinematic) {
             velocity = VectorSum(velocity, VectorScale(moveDir, moveSpeed));
@@ -90,106 +82,28 @@
 
         Mesh.meshes[1].rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
         //cube2.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube2.rotation);
-
-        //----------- DRAW Update ------------
-        Mesh.meshes.forEach(mesh => {
-            mesh.DrawMesh();
-        });
-    }
-
-    window.onkeyup = function(e) {
-        moveDir = new Vec3(0,0,0);
-    }
-
-    window.onkeypress = function(e) 
-    {
-        moveDir = new Vec3(0,0,0);
-        //----------Camera Controls-------
-        // FORWARD
-        if (e.key == 'w') {
-            moveDir = VectorSum(moveDir, camera.forward);
-        }
-        // BACK
-        if (e.key == 's') {
-            moveDir = VectorSum(moveDir, camera.back);
-        }
-        // LEFT
-        if (e.key == 'a') {
-            moveDir = VectorSum(moveDir, camera.left);
-        }
-        // RIGHT
-        if (e.key == 'd') {
-            moveDir = VectorSum(moveDir, camera.right);
-        }
-        // UP
-        if (e.key == ' ') {
-            moveDir = VectorSum(moveDir, camera.up);
-        }
-        // DOWN
-        if (e.key == 'c') {
-            moveDir = VectorSum(moveDir, camera.down);
-        }
-
-        // ROTATE CCW
-        if (e.key == 'q') {
-            camera.rotation = MatrixMultiply(camera.rotation, RotZ(-PI/90));
-        }
-        // ROTATE CW
-        else if (e.key == 'e') {
-            camera.rotation = MatrixMultiply(camera.rotation, RotZ(PI/90));
-        }
-
-        // ---------------- FOV ------------------
-        if (e.key == ".")
-        {
-            FOV(ToDeg(fov) + 5);
-            console.log("FOV: "+ToDeg(fov));
-        }
-        if (e.key == ",")
-        {
-            FOV(ToDeg(fov) - 5);
-            console.log("FOV: "+ToDeg(fov));
-        }
         
-        // ---------------- Physics ------------------
-
-        // Toggle momentum
-        if (e.key == 'x') {
-            velocity = new Vec3(0,0,0);//Reset every toggle state
-            isKinematic = !isKinematic;
-        }
-
-        // Toggle dampeners
-        if (e.key == 'z') {
-            dampenersActive = !dampenersActive;
-        }
-       
-        // ---------------- ------------------
+        //----------- DRAW ------------
+        Mesh.DrawMeshes(); 
         
-        // Spawn Mesh
-        if (e.key === '`') {
-            let c = new CubeMesh(1);
-            c.position = VectorSum(camera.position, VectorScale(camera.forward, 10));
-            console.log(c.position.ToString());
+        // ------------------------------------
+        if (DEBUGGING) {
+            let trisIgnored = Mesh.worldTriangleCount - Mesh.worldTriangleDrawCount;
+            let trisIncluded = Mesh.worldTriangleCount - trisIgnored;
+            let trisPercIncluded = Math.round((trisIncluded / Mesh.worldTriangleCount)*100);
+            let trisPercIgnored = Math.round((trisIgnored / Mesh.worldTriangleCount)*100);
+            
+            $('#debug').text("");       
+            $('#debug').append("<div>"+"Meshes: "+Mesh.meshes.length+"</div>");
+            $('#debug').append("<div>"+"Triangles: "+Mesh.worldTriangleCount+"</div>");  
+            $('#debug').append("<div>"+"Triangles Drawing: "+trisIncluded+" ( "+trisPercIncluded+"% )</div>");      
+            $('#debug').append("<div>"+"Triangles Ignored: "+trisIgnored+" ( "+trisPercIgnored+"% )</div>");       
+            $('#debug').append("</br>");       
+            $('#debug').append("<div>Camera Position: "+camera.position.ToString()+"</div>");       
+            $('#debug').append("<div>Velocity: "+velocity.ToString()+"</div>");       
+            $('#debug').append("<div>Speed: "+Math.round(Magnitude(velocity))+"</div>");       
         }
-    };
-
-    let prevMouseX = 0;
-    let prevMouseY = 0;
-    let deltaMouseX = 0;
-    let deltaMouseY = 0;
-
-    onmousemove = function() {
-        deltaMouseX = mouseX - prevMouseX;
-        deltaMouseY = mouseY - prevMouseY;
-        prevMouseX = mouseX;
-        prevMouseY = mouseY;
-        camera.rotation = MatrixMultiply(camera.rotation, YPR(0.008*deltaMouseY, .008 * -deltaMouseX, 0));
-        let local = camera.localPosition;
-
-        console.log("Camera local pos:"+local.ToString());
-        console.log("Camera pos:"+camera.position.ToString());
-    };
+    }
 </script>
 
 </html>
