@@ -1,4 +1,19 @@
-    //-----------GRAPHICS---------------
+function ToDeg(rad) {
+    return rad * 180.0/PI;
+}
+
+function ToRad(deg) {
+    return deg * PI/180.0;
+}
+
+//-----------GRAPHICS---------------
+
+    class GraphicSettings
+    {
+        static culling = true;
+        static invertNormals = false;
+        static debugNormals = false;
+    }
     
     var forward = { x: 0, y: 0, z: -1 };
     var back = { x: 0, y: 0, z: 1 };
@@ -24,24 +39,9 @@
         [0, 0, -1, 0]
     ];
 
-    let CULLING = true;
-    let DEBUG_NORMALS = false;
-
-    function ToDeg(rad) {
-        return rad * 180.0/PI;
-    }
-    
-    function ToRad(deg) {
-        return deg * PI/180.0;
-    }
-
-    function FOV(deg) {
-        PerspectiveMatrix(deg);
-    }
-
-    function PerspectiveMatrix(degFOV)
-    {  
-        fov = ToRad(degFOV);
+    function FOV(deg)
+    {
+        fov = ToRad(deg);
         perspectiveProjectionMatrix = [
             [1.0/Math.tan(fov/2), 0, 0, 0],
             [0, 1.0/Math.tan(fov/2), 0, 0],
@@ -50,6 +50,30 @@
         ]; 
         
         return perspectiveProjectionMatrix;
+    }
+
+    function Project(point)
+    {
+        let p = point;
+        if (p.v.length < 4) {
+            p = Vec4.ToVec4(p);
+        }
+        let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, p);
+        perspPoint.x *= worldScale*screenWidth;
+        perspPoint.y *= worldScale*screenHeight;
+
+        return perspPoint;
+    }
+
+    function DrawTriangle(tri = []) {
+        let p1 = tri[0];
+        let p2 = tri[1];
+        let p3 = tri[2];
+        
+        //Draw Triangle
+        line(p1.x, p1.y, 0, p2.x, p2.y, 0);
+        line(p2.x, p2.y, 0, p3.x, p3.y, 0);
+        line(p3.x, p3.y, 0, p1.x, p1.y, 0);
     }
 
     class Transform
@@ -201,50 +225,43 @@
         //     }
         // }
 
-        drawTriangle(tri = []) {
-            let p1 = tri[0];
-            let p2 = tri[1];
-            let p3 = tri[2];
-            
-            //Draw Triangle
-            line(p1.x, p1.y, 0, p2.x, p2.y, 0);
-            line(p2.x, p2.y, 0, p3.x, p3.y, 0);
-            line(p3.x, p3.y, 0, p1.x, p1.y, 0);
-        }
-
         transformTriangles() {
             let projectedTriangles = [];
-            //Transform
+            
+            //Transform Triangles
             let tris = this.triangles(this.vertices);
-            for (let i = 0; i < tris.length; i++) {
+            for (let i = 0; i < tris.length; i++) 
+            {
                 let camSpaceTri = [];
                 let tri = tris[i];
-                for (let j = 0; j < tri.length; j++) {
-                    // Local 3D (x,y,z)
-                    let vert = tri[j];
+                for (let j = 0; j < tri.length; j++) 
+                {
+                    let vert = tri[j];// Local 3D (x,y,z)
                     // Homogeneous coords (x, y, z, w=1)
                     vert = new Vec4(vert.x, vert.y, vert.z, 1);
 
-                    // ======== World space ========
+                    // =================== WORLD SPACE ===================
                     // Transform local coords to world-space coords.
+
                     let modelToWorldMatrix = this.TRS;
                     let worldPoint = Matrix4x4VectorMult(modelToWorldMatrix, vert);
                    
-                    // ====== View/Cam/Eye space ========
+                    // ================ VIEW/CAM/EYE SPACE ================
                     // Transform world coordinates to view coordinates.
+
                     let worldToViewMatrix = camera.TRInverse;
                     let cameraSpacePoint = Matrix4x4VectorMult(worldToViewMatrix, worldPoint);
                     camSpaceTri[j] = cameraSpacePoint;
                 };
                 
                 // Still in View/Cam/Eye space
-                
+                //-------------------Normal/Culling------------------------
                 let p1 = camSpaceTri[0];
                 let p2 = camSpaceTri[1];
                 let p3 = camSpaceTri[2];
                 let centroid = new Vec3((p1.x+p2.x+p3.x)/3.0, (p1.y+p2.y+p3.y)/3.0, (p1.z+p2.z+p3.z)/3.0);
-                let behindCamera = DotProduct(Normalized(centroid), forward) <= 0;
-                    
+                
+                let behindCamera = DotProduct(Normalized(centroid), forward) <= 0;    
                 if (behindCamera) {
                     continue; // Skip triangle if it's out of cam view.
                 } 
@@ -254,14 +271,14 @@
                 let b = VectorSub(p3, p1);
                 let normal = Normalized(CrossProduct(a, b));
 
-                //-------------------Normal/Culling------------------------
-                if (CULLING)
+                if (GraphicSettings.invertNormals) {
+                    normal = VectorScale(normal, -1.0)
+                }
+                
+                if (GraphicSettings.culling)
                 {
-                    // 1st. Calculate triangle surface normal.
-                    // 2st. Check if triangle surface can be seen from the camera's position.
-
-                    // Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
-                    let normalizedFromCamPos = Normalized(centroid);
+                    // Check if triangle surface can be seen from the camera's position.
+                    let normalizedFromCamPos = Normalized(centroid);// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
                     let camVisible = DotProduct(normalizedFromCamPos, normal) <= 0;
                     
                     if (!camVisible) {
@@ -269,52 +286,44 @@
                     } 
                 }
 
-                // ====== Screen space ========
-                
-                //Project triangle from 3D to 2D
-                let projectedTri = []
-                for (let j = 0; j < camSpaceTri.length; j++) {
-                    const cameraSpacePoint = camSpaceTri[j]; 
-                    // ======== Screen space ==========
-                    // Project to screen space (image space) 
-                    let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, cameraSpacePoint);
-                    perspPoint.x *= worldScale*screenWidth;
-                    perspPoint.y *= worldScale*screenHeight;
-                    projectedTri[j] = perspPoint;
-                }; 
-                
-                projectedTriangles[i] = projectedTri;
+                // ================ SCREEN SPACE ==================
+                // Project to screen space (image space) 
 
-                if (DEBUG_NORMALS)
+                if (GraphicSettings.debugNormals)
                 {
                     //---------Draw triangle centroid and normal-----------
-                    let projCentroidToNormal = Matrix4x4VectorMult(perspectiveProjectionMatrix, Vec4.ToVec4(VectorSum(centroid, normal)));
-                    let projCentroid = Matrix4x4VectorMult(perspectiveProjectionMatrix, Vec4.ToVec4(centroid));
-                    projCentroidToNormal.x *= worldScale*screenWidth;
-                    projCentroidToNormal.y *= worldScale*screenHeight;
-                    projCentroid.x *= worldScale*screenWidth;
-                    projCentroid.y *= worldScale*screenHeight;
+                    let projCentroidToNormal = Project(Vec4.ToVec4(VectorSum(centroid, normal)));
+                    let projCentroid = Project(Vec4.ToVec4(centroid));
                     point(projCentroid.x, projCentroid.y, 0);
                     line(projCentroid.x, projCentroid.y, 0, projCentroidToNormal.x, projCentroidToNormal.y, 0);
                 }
+
+                //Project single triangle from 3D to 2D
+                let projectedTri = []
+                for (let j = 0; j < 3; j++) {
+                    const cameraSpacePoint = camSpaceTri[j]; 
+                    projectedTri[j] = Project(cameraSpacePoint);
+                }; 
+                //Add projected tri
+                projectedTriangles[i] = projectedTri;
             }
 
             return projectedTriangles;
         }
 
-        DrawMesh() {
+        drawMesh() {
             strokeWeight(2);
             let projectedTriangles = this.transformTriangles();
+            Mesh.worldTriangleDrawCount += projectedTriangles.length;
             projectedTriangles.forEach(tri => {
-                this.drawTriangle(tri);
+                DrawTriangle(tri);
             });
-            return projectedTriangles;
         }
 
         static DrawMeshes() {
             Mesh.worldTriangleDrawCount = 0;
             Mesh.meshes.forEach(mesh => {
-                Mesh.worldTriangleDrawCount += (mesh.DrawMesh()).length;
+                mesh.drawMesh();
             });
         }
     }

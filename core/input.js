@@ -93,10 +93,13 @@ onmousemove = function() {
 };
 
 onkeydown = function(e) {
+    if(e.key == '-') {
+        GraphicSettings.invertNormals = !GraphicSettings.invertNormals;
+    }
     if(e.key == 'n') {
-        DEBUG_NORMALS = !DEBUG_NORMALS;
+        GraphicSettings.debugNormals = !GraphicSettings.debugNormals;
     }
     if (e.key == 'v') {
-        CULLING = !CULLING;
+        GraphicSettings.culling = !GraphicSettings.culling;
     }
 }
