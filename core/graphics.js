@@ -13,6 +13,7 @@ function ToRad(deg) {
         static culling = true;
         static invertNormals = false;
         static debugNormals = false;
+        static perspective = true;
     }
     
     var forward = { x: 0, y: 0, z: -1 };
@@ -22,15 +23,19 @@ function ToRad(deg) {
     var up = { x: 0, y: -1, z: 0 };
     var down = { x: 0, y: 1, z: 0 };
     
-    var orthographicProjectionMatrix = [
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 0]
-    ];
-
-    let screenWidth = 700;//screen.width - 20;
+    let screenWidth = 700;//700;//screen.width - 20;
     let screenHeight = 700; //screen.height - 20; //screen.height;// - 30;
     let worldScale = .5;
+
+    var orthographicProjectionMatrix = [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 1]
+    ];
+s
+    var nearClippingPlane = -.1;
+    var farClippingPlane = -1000;
     var fov = 60*Math.PI/180.0;
     let perspectiveProjectionMatrix = [
         [1.0/Math.tan(fov/2), 0, 0, 0],
@@ -52,17 +57,21 @@ function ToRad(deg) {
         return perspectiveProjectionMatrix;
     }
 
-    function Project(point)
+    function ProjectPoint(point)
     {
         let p = point;
         if (p.v.length < 4) {
             p = Vec4.ToVec4(p);
         }
-        let perspPoint = Matrix4x4VectorMult(perspectiveProjectionMatrix, p);
-        perspPoint.x *= worldScale*screenWidth;
-        perspPoint.y *= worldScale*screenHeight;
+        if (GraphicSettings.perspective) {
+            p = Matrix4x4VectorMult(perspectiveProjectionMatrix, p);
+        } else {
+            p = Matrix4x4VectorMult(orthographicProjectionMatrix, p);
+        }
+        p.x *= worldScale*screenWidth;
+        p.y *= worldScale*screenHeight;
 
-        return perspPoint;
+        return p;
     }
 
     function DrawTriangle(tri = []) {
@@ -261,10 +270,12 @@ function ToRad(deg) {
                 let p3 = camSpaceTri[2];
                 let centroid = new Vec3((p1.x+p2.x+p3.x)/3.0, (p1.y+p2.y+p3.y)/3.0, (p1.z+p2.z+p3.z)/3.0);
                 
+                let tooCloseToCamera = (p1.z >= nearClippingPlane || p2.z >= nearClippingPlane || p3.z >= nearClippingPlane || centroid.z >= nearClippingPlane);
+                let tooFarFromCamera = (p1.z <= farClippingPlane || p2.z <= farClippingPlane || p3.z <= farClippingPlane || centroid.z <= farClippingPlane);
                 let behindCamera = DotProduct(Normalized(centroid), forward) <= 0;    
-                if (behindCamera) {
+                if (tooCloseToCamera || tooFarFromCamera || behindCamera) {
                     continue; // Skip triangle if it's out of cam view.
-                } 
+                }
                 
                 // Calculate triangle suface Normal
                 let a = VectorSub(p2, p1);
@@ -277,7 +288,7 @@ function ToRad(deg) {
                 
                 if (GraphicSettings.culling)
                 {
-                    // Check if triangle surface can be seen from the camera's position.
+                    // Back-face culling - Checks if the triangles backside is facing the camera.
                     let normalizedFromCamPos = Normalized(centroid);// Since camera is (0,0,0) in view space, the displacement vector from camera to centroid IS the centroid itself.
                     let camVisible = DotProduct(normalizedFromCamPos, normal) <= 0;
                     
@@ -292,8 +303,8 @@ function ToRad(deg) {
                 if (GraphicSettings.debugNormals)
                 {
                     //---------Draw triangle centroid and normal-----------
-                    let projCentroidToNormal = Project(Vec4.ToVec4(VectorSum(centroid, normal)));
-                    let projCentroid = Project(Vec4.ToVec4(centroid));
+                    let projCentroidToNormal = ProjectPoint(Vec4.ToVec4(VectorSum(centroid, normal)));
+                    let projCentroid = ProjectPoint(Vec4.ToVec4(centroid));
                     point(projCentroid.x, projCentroid.y, 0);
                     line(projCentroid.x, projCentroid.y, 0, projCentroidToNormal.x, projCentroidToNormal.y, 0);
                 }
@@ -302,7 +313,7 @@ function ToRad(deg) {
                 let projectedTri = []
                 for (let j = 0; j < 3; j++) {
                     const cameraSpacePoint = camSpaceTri[j]; 
-                    projectedTri[j] = Project(cameraSpacePoint);
+                    projectedTri[j] = ProjectPoint(cameraSpacePoint);
                 }; 
                 //Add projected tri
                 projectedTriangles[i] = projectedTri;
@@ -335,16 +346,29 @@ function ToRad(deg) {
             super(scale, position, rotationEuler);
 
             // Local Space (Object Space)
+            // this.vertices = [
+            //     { x: -1, y: 1, z: 1 },
+            //     { x: -1, y: -1, z: 1 },
+            //     { x: 1, y: -1, z: 1 },
+            //     { x: 1, y: 1, z: 1 },
+            //     //forward
+            //     { x: -1, y: 1, z: -1 },
+            //     { x: -1, y: -1, z: -1 },
+            //     { x: 1, y: -1, z: -1 },
+            //     { x: 1, y: 1, z: -1 }
+            // ];
+
             this.vertices = [
-                { x: -1, y: 1, z: 1 },
-                { x: -1, y: -1, z: 1 },
-                { x: 1, y: -1, z: 1 },
-                { x: 1, y: 1, z: 1 },
-                //forward
-                { x: -1, y: 1, z: -1 },
+                //south
                 { x: -1, y: -1, z: -1 },
+                { x: -1, y: 1, z: -1 },
+                { x: 1, y: 1, z: -1 },
                 { x: 1, y: -1, z: -1 },
-                { x: 1, y: 1, z: -1 }
+                //north
+                { x: -1, y: -1, z: 1 },
+                { x: -1, y: 1, z: 1 },
+                { x: 1, y: 1, z: 1 },
+                { x: 1, y: -1, z: 1 },
             ];
         }
 

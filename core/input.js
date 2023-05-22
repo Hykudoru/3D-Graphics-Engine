@@ -1,3 +1,20 @@
+
+
+let prevMouseX = 0;
+let prevMouseY = 0;
+let deltaMouseX = 0;
+let deltaMouseY = 0;
+
+onmousemove = function() {
+    deltaMouseX = mouseX - prevMouseX;
+    deltaMouseY = mouseY - prevMouseY;
+    prevMouseX = mouseX;
+    prevMouseY = mouseY;
+    camera.rotation = MatrixMultiply(camera.rotation, YPR(0.008*deltaMouseY, 0.008*-deltaMouseX, 0));
+};
+
+var moveDir = new Vec3();
+
 window.onkeyup = function(e) {
     moveDir = new Vec3(0,0,0);
 }
@@ -39,14 +56,20 @@ window.onkeypress = function(e)
     else if (e.key == 'e') {
         camera.rotation = MatrixMultiply(camera.rotation, RotZ(PI/90));
     }
+    // Reset Camera
+    else if (e.key == '0')
+    {
+        camera.rotation = Matrix3x3.identity;
+        camera.position = Vec3.zero;
+    }
 
     // ---------------- FOV ------------------
-    if (e.key == ".")
+    if (e.key == ".")// <
     {
         FOV(ToDeg(fov) + 5);
         console.log("FOV: "+ToDeg(fov));
     }
-    if (e.key == ",")
+    if (e.key == ",")// >
     {
         FOV(ToDeg(fov) - 5);
         console.log("FOV: "+ToDeg(fov));
@@ -75,23 +98,8 @@ window.onkeypress = function(e)
     }
 };
 
-let prevMouseX = 0;
-let prevMouseY = 0;
-let deltaMouseX = 0;
-let deltaMouseY = 0;
 
-onmousemove = function() {
-    deltaMouseX = mouseX - prevMouseX;
-    deltaMouseY = mouseY - prevMouseY;
-    prevMouseX = mouseX;
-    prevMouseY = mouseY;
-    camera.rotation = MatrixMultiply(camera.rotation, YPR(0.008*deltaMouseY, .008 * -deltaMouseX, 0));
-    let local = camera.localPosition;
-
-    console.log("Camera local pos:"+local.ToString());
-    console.log("Camera pos:"+camera.position.ToString());
-};
-
+// Debugging
 onkeydown = function(e) {
     if(e.key == '-') {
         GraphicSettings.invertNormals = !GraphicSettings.invertNormals;
@@ -101,5 +109,8 @@ onkeydown = function(e) {
     }
     if (e.key == 'v') {
         GraphicSettings.culling = !GraphicSettings.culling;
+    }
+    if (e.key == 'p') {
+        GraphicSettings.perspective = !GraphicSettings.perspective;
     }
 }

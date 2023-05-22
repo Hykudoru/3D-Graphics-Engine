@@ -104,10 +104,10 @@ class Vec4 extends Vec3
 
 class Matrix3x3 
 {
-    matrix = [
+    static identity = [
         [1, 0, 0],
         [0, 1, 0],
-        [0, 0, 1]
+        [0, 0, 1],
     ];
     
     constructor(mtx3x3)
@@ -117,13 +117,19 @@ class Matrix3x3
             [0, 1, 0],
             [0, 0, 1]
         ];
-
         this.matrix = mtx3x3 || matrix;
     }
 }
 
 class Matrix4x4 
 {    
+    static identity = [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+    ];
+
     constructor(mtx4x4)
     {
         let matrix = [
@@ -217,6 +223,18 @@ class Matrix4x4
         return new Vec3(result[0], result[1], result[2]);
     }
 
+    function Transpose3x3(matrix) {
+        let mtx = new Matrix3x3();
+
+        for (var r = 0; r < 3; r++) {
+            mtx.matrix[0][r] = matrix[r][0];
+            mtx.matrix[1][r] = matrix[r][1];
+            mtx.matrix[2][r] = matrix[r][2];
+        }
+
+        return mtx.matrix;
+    }
+
     //--------------- 4x4 ---------------------
 
     function Transpose4x4(matrix) {
@@ -260,7 +278,7 @@ class Matrix4x4
             result.x /= result.w;
             result.y /= result.w;
             result.z /= result.w;
-            // result.w /= result.w;
+            //result.w /= result.w;
         }
 
         return result;
