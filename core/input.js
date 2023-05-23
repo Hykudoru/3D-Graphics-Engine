@@ -14,7 +14,7 @@ onmousemove = function() {
     prevMouseX = x;
     prevMouseY = y;
     
-    camera.rotation = MatrixMultiply(camera.rotation, YPR(0.008*deltaMouseY, 0.008*-deltaMouseX, 0));
+    Camera.main.rotation = MatrixMultiply(Camera.main.rotation, YPR(0.008*deltaMouseY, 0.008*-deltaMouseX, 0));
 };
 
 var moveDir = new Vec3();
@@ -29,44 +29,50 @@ window.onkeypress = function(e)
     //----------Camera Controls-------
     // FORWARD
     if (e.key == 'w') {
-        moveDir = VectorSum(moveDir, camera.forward);
+        moveDir = VectorSum(moveDir, Camera.main.forward);
     }
     // BACK
     if (e.key == 's') {
-        moveDir = VectorSum(moveDir, camera.back);
+        moveDir = VectorSum(moveDir, Camera.main.back);
     }
     // LEFT
     if (e.key == 'a') {
-        moveDir = VectorSum(moveDir, camera.left);
+        moveDir = VectorSum(moveDir, Camera.main.left);
     }
     // RIGHT
     if (e.key == 'd') {
-        moveDir = VectorSum(moveDir, camera.right);
+        moveDir = VectorSum(moveDir, Camera.main.right);
     }
     // UP
     if (e.key == ' ') {
-        moveDir = VectorSum(moveDir, camera.up);
+        moveDir = VectorSum(moveDir, Camera.main.up);
     }
     // DOWN
     if (e.key == 'c') {
-        moveDir = VectorSum(moveDir, camera.down);
+        moveDir = VectorSum(moveDir, Camera.main.down);
     }
 
     // ROTATE CCW
     if (e.key == 'q') {
-        camera.rotation = MatrixMultiply(camera.rotation, RotZ(PI/90));
+        Camera.main.rotation = MatrixMultiply(Camera.main.rotation, RotZ(PI/90));
     }
     // ROTATE CW
     else if (e.key == 'e') {
-        camera.rotation = MatrixMultiply(camera.rotation, RotZ(-PI/90));
+        Camera.main.rotation = MatrixMultiply(Camera.main.rotation, RotZ(-PI/90));
     }
     // Reset Camera
     else if (e.key == '0')
     {
-        camera.rotation = Matrix3x3.identity;
-        camera.position = Vec3.zero;
+        // Camera.main.reset();
+        //Camera.main.rotation = Camera.main.localRotation;
+        // Camera.main.position = Camera.main.localPosition;
     }
-
+    else if (e.key == 1) {
+        Camera.main = Camera.cameras[0];
+    }
+    else if (e.key == 2) {
+        Camera.main = Camera.cameras[1];
+    }
     // ---------------- FOV ------------------
     if (e.key == ".")// <
     {
@@ -97,7 +103,7 @@ window.onkeypress = function(e)
     // Spawn Mesh
     if (e.key === '`') {
         let c = new CubeMesh(1);
-        c.position = VectorSum(camera.position, VectorScale(camera.forward, 10));
+        c.position = VectorSum(Camera.main.position, VectorScale(Camera.main.forward, 10));
         console.log(c.position.ToString());
     }
 };

@@ -110,6 +110,7 @@ let worldScale = .5;
         get up() {return MatrixVectorMultiply(this.rotation, up);}
         get down() {return MatrixVectorMultiply(this.rotation, down);}
         get localPosition() {return Matrix4x4VectorMult(this.translationMatrix4x4Inverse, new Vec4(this.position.x, this.position.y, this.position.z, 1));}
+        //get localRotation() {return MatrixMultiply(this.rotation, Transpose3x3(this.rotation));}
         
         constructor(scale = 1, position = new Vec3(0, 0, 0), rotationEuler = new Vec3(0, 0, 0))
         {
@@ -174,13 +175,18 @@ let worldScale = .5;
 
     class Camera extends Transform
     {
+        static main;
         static cameras = [];
         static #cameraCount = 0;
-        
+        name = "";
         constructor(scale = 1, position = new Vec3(0, 0, 0), rotationEuler = new Vec3(0, 0, 0))
         {
             super(scale, position, rotationEuler);
+            if (Camera.#cameraCount == 0) {
+                Camera.main = this;
+            }
             Camera.cameras[Camera.#cameraCount++] = this;
+            this.name = "Camera "+Camera.#cameraCount;
         }
     }
 
@@ -264,7 +270,7 @@ let worldScale = .5;
                     // ================ VIEW/CAM/EYE SPACE ================
                     // Transform world coordinates to view coordinates.
 
-                    let worldToViewMatrix = camera.TRInverse;
+                    let worldToViewMatrix = Camera.main.TRInverse;
                     let cameraSpacePoint = Matrix4x4VectorMult(worldToViewMatrix, worldPoint);
                     camSpaceTri[j] = cameraSpacePoint;
                 };

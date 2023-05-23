@@ -51,10 +51,11 @@
     var accel = 0.1;
     var velocity = new Vec3(0,0,0);
     var isKinematic = false;
-    var dampenersActive = true;s
-
+    var dampenersActive = true;
+    var camMesh = new CubeMesh();
+    var camera2 = new Camera(1, new Vec3(0, 50, 0), new Vec3(-90*Math.PI/180, 0, 0));
     function setup() 
-    {
+    {           
         createCanvas(screenWidth, screenHeight, WEBGL);
         
         new CubeMesh(1, new Vec3(-5,-5,-10));
@@ -68,9 +69,14 @@
         new CubeMesh(1, new Vec3(5,-5,40));
 
         new CubeMesh(100, new Vec3(0,0,-400));
-        camera.position = new Vec3();
+
+        
+        // Camera.main.position = new Vec3();
+        console.log(Camera.main.name);
+        //Camera.main = camera2;
+        console.log(Camera.main.name);
     }
-    
+
     function draw() 
     {
         background(0);
@@ -84,10 +90,10 @@
             if (dampenersActive) {
                velocity = VectorScale(velocity, 0.95);
             }
-            camera.position = VectorSum(camera.position, velocity);
+            Camera.main.position = VectorSum(Camera.main.position, velocity);
             console.log("Velocity:"+velocity.ToString());
         } else {
-            camera.position = VectorSum(camera.position, VectorScale(moveDir, moveSpeed));
+            Camera.main.position = VectorSum(Camera.main.position, VectorScale(moveDir, moveSpeed));
         }
 
         Mesh.meshes[1].rotation = MatrixMultiply(RotZ(angle), Mesh.meshes[1].rotation);// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
@@ -110,7 +116,7 @@
             $('#debug').append("<div>"+"Triangles Drawing: "+trisIncluded+" ( "+trisPercIncluded+"% )</div>");      
             $('#debug').append("<div>"+"Triangles Ignored: "+trisIgnored+" ( "+trisPercIgnored+"% )</div>");       
             $('#debug').append("</br>");       
-            $('#debug').append("<div>Camera Position: "+camera.position.ToString()+"</div>");       
+            $('#debug').append("<div>Camera Position: "+Camera.main.position.ToString()+"</div>");       
             $('#debug').append("<div>Velocity: "+velocity.ToString()+"</div>");       
             $('#debug').append("<div>Speed: "+Math.round(Magnitude(velocity))+"</div>");       
         }
@@ -118,7 +124,7 @@
 
 
     function ReadOBJFile(e)
-    {
+    {setup  
         var file = e.target.files[0];
         var reader = new FileReader();
         reader.onload = function(ev) {
