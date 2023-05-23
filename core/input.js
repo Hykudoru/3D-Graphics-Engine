@@ -64,8 +64,9 @@ window.onkeypress = function(e)
     else if (e.key == '0')
     {
         // Camera.main.reset();
-        //Camera.main.rotation = Camera.main.localRotation;
-        // Camera.main.position = Camera.main.localPosition;
+        //Fix later
+        Camera.main.rotation = Matrix3x3.identity;
+        Camera.main.position = Vec3.zero;
     }
     else if (e.key == 1) {
         Camera.main = Camera.cameras[0];
