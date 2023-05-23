@@ -38,26 +38,36 @@
 
 <body>
     <h1 id="title">3D Graphics Engine</h1>
+    <input id="file" type="file"/>
     <div id="debug"></div>
     <script src="sketch.js"></script>
 </body>
 <script>
     "use strict";
     let DEBUGGING = true;
-    var angle = (Math.PI / 4) * 0.0005;
+    var angle = (Math.PI / 4) * 0.005;
 
     var moveSpeed = 1;
     var accel = 0.1;
     var velocity = new Vec3(0,0,0);
     var isKinematic = false;
-    var dampenersActive = true;
+    var dampenersActive = true;s
 
     function setup() 
     {
         createCanvas(screenWidth, screenHeight, WEBGL);
-        var smallCube = new CubeMesh(1, new Vec3(20,0,-10));
-        var mediumCube = new CubeMesh(10, new Vec3(40,0,-100));
-        var largeCube = new CubeMesh(100, new Vec3(0,0,-400));
+        
+        new CubeMesh(1, new Vec3(-5,-5,-10));
+        new CubeMesh(1, new Vec3(-5,5,-20));
+        new CubeMesh(1, new Vec3(5,5,-30));
+        new CubeMesh(1, new Vec3(5,-5,-40));
+        
+        new CubeMesh(1, new Vec3(-5,-5,10));
+        new CubeMesh(1, new Vec3(-5,5,20));
+        new CubeMesh(1, new Vec3(5,5,30));
+        new CubeMesh(1, new Vec3(5,-5,40));
+
+        new CubeMesh(100, new Vec3(0,0,-400));
         camera.position = new Vec3();
     }
     
@@ -81,6 +91,7 @@
         }
 
         Mesh.meshes[1].rotation = MatrixMultiply(RotZ(angle), Mesh.meshes[1].rotation);// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
+        Mesh.meshes[2].rotation = MatrixMultiply(Mesh.meshes[2].rotation, RotZ(angle));// MatrixMultiply(YPR(angle * ((screenWidth / 2)), angle * -((screenWidth / 2)), 0), Mesh.meshes[1].rotation);
         //cube2.rotation = MatrixMultiply(YPR(angle * ((screenWidth / 2) - mouseY), angle * -((screenWidth / 2) - mouseX), 0), cube2.rotation);
         
         //----------- DRAW ------------
@@ -102,9 +113,24 @@
             $('#debug').append("<div>Camera Position: "+camera.position.ToString()+"</div>");       
             $('#debug').append("<div>Velocity: "+velocity.ToString()+"</div>");       
             $('#debug').append("<div>Speed: "+Math.round(Magnitude(velocity))+"</div>");       
-
         }
     }
+
+
+    function ReadOBJFile(e)
+    {
+        var file = e.target.files[0];
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            console.log(ev.target.result);
+        };
+
+        reader.readAsText(file);
+
+    }
+    document.getElementById('file').addEventListener('change', ReadOBJFile, false);
+    
+    
 </script>
 
 </html>

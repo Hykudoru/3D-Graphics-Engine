@@ -5,7 +5,9 @@ function ToDeg(rad) {
 function ToRad(deg) {
     return deg * PI/180.0;
 }
-
+let screenWidth = 700;//700;//screen.width - 20;
+let screenHeight = 700; //screen.height - 20; //screen.height;// - 30;
+let worldScale = .5;
 //-----------GRAPHICS---------------
 
     class GraphicSettings
@@ -15,33 +17,36 @@ function ToRad(deg) {
         static debugNormals = false;
         static perspective = true;
     }
+   
+    var forward = new Vec3(0,0,-1);
+    var back = new Vec3(0,0,1);
+    var right = new Vec3(1,0,0);
+    var left = new Vec3(-1,0,0);
+    var up = new Vec3(0,1,0);
+    var down = new Vec3(0,-1,0);
     
-    var forward = { x: 0, y: 0, z: -1 };
-    var back = { x: 0, y: 0, z: 1 };
-    var right = { x: 1, y: 0, z: 0 };
-    var left = { x: -1, y: 0, z: 0 };
-    var up = { x: 0, y: -1, z: 0 };
-    var down = { x: 0, y: 1, z: 0 };
-    
-    let screenWidth = 700;//700;//screen.width - 20;
-    let screenHeight = 700; //screen.height - 20; //screen.height;// - 30;
-    let worldScale = .5;
-
     var orthographicProjectionMatrix = [
         [1, 0, 0, 0],
         [0, 1, 0, 0],
         [0, 0, 0, 0],
         [0, 0, 0, 1]
     ];
-s
+
     var nearClippingPlane = -.1;
     var farClippingPlane = -1000;
     var fov = 60*Math.PI/180.0;
+    // let perspectiveProjectionMatrix = [
+    //     [1.0/Math.tan(fov/2), 0, 0, 0],
+    //     [0, 1.0/Math.tan(fov/2), 0, 0],
+    //     [0, 0, 1.0, 0],
+    //     [0, 0, -1.0, 0]
+    // ];
+    // WebGL draws LH upside-down so we also invert y then z (again)
     let perspectiveProjectionMatrix = [
         [1.0/Math.tan(fov/2), 0, 0, 0],
-        [0, 1.0/Math.tan(fov/2), 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, -1, 0]
+        [0, -1.0/Math.tan(fov/2), 0, 0],
+        [0, 0, -1.0, 0],
+        [0, 0, -1.0, 0]
     ];
 
     function FOV(deg)
@@ -49,9 +54,9 @@ s
         fov = ToRad(deg);
         perspectiveProjectionMatrix = [
             [1.0/Math.tan(fov/2), 0, 0, 0],
-            [0, 1.0/Math.tan(fov/2), 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, -1, 0]
+            [0, -1.0/Math.tan(fov/2), 0, 0],
+            [0, 0, -1.0, 0],
+            [0, 0, -1.0, 0]
         ]; 
         
         return perspectiveProjectionMatrix;
@@ -60,9 +65,11 @@ s
     function ProjectPoint(point)
     {
         let p = point;
+        
         if (p.v.length < 4) {
             p = Vec4.ToVec4(p);
         }
+        
         if (GraphicSettings.perspective) {
             p = Matrix4x4VectorMult(perspectiveProjectionMatrix, p);
         } else {
@@ -70,7 +77,6 @@ s
         }
         p.x *= worldScale*screenWidth;
         p.y *= worldScale*screenHeight;
-
         return p;
     }
 
@@ -278,8 +284,8 @@ s
                 }
                 
                 // Calculate triangle suface Normal
-                let a = VectorSub(p2, p1);
-                let b = VectorSub(p3, p1);
+                let a = VectorSub(p3, p1);
+                let b = VectorSub(p2, p1);
                 let normal = Normalized(CrossProduct(a, b));
 
                 if (GraphicSettings.invertNormals) {
@@ -346,29 +352,17 @@ s
             super(scale, position, rotationEuler);
 
             // Local Space (Object Space)
-            // this.vertices = [
-            //     { x: -1, y: 1, z: 1 },
-            //     { x: -1, y: -1, z: 1 },
-            //     { x: 1, y: -1, z: 1 },
-            //     { x: 1, y: 1, z: 1 },
-            //     //forward
-            //     { x: -1, y: 1, z: -1 },
-            //     { x: -1, y: -1, z: -1 },
-            //     { x: 1, y: -1, z: -1 },
-            //     { x: 1, y: 1, z: -1 }
-            // ];
-
             this.vertices = [
                 //south
-                { x: -1, y: -1, z: -1 },
-                { x: -1, y: 1, z: -1 },
-                { x: 1, y: 1, z: -1 },
-                { x: 1, y: -1, z: -1 },
-                //north
                 { x: -1, y: -1, z: 1 },
                 { x: -1, y: 1, z: 1 },
                 { x: 1, y: 1, z: 1 },
                 { x: 1, y: -1, z: 1 },
+                //north
+                { x: -1, y: -1, z: -1 },
+                { x: -1, y: 1, z: -1 },
+                { x: 1, y: 1, z: -1 },
+                { x: 1, y: -1, z: -1 },
             ];
         }
 

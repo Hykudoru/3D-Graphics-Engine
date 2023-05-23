@@ -6,10 +6,14 @@ let deltaMouseX = 0;
 let deltaMouseY = 0;
 
 onmousemove = function() {
-    deltaMouseX = mouseX - prevMouseX;
-    deltaMouseY = mouseY - prevMouseY;
-    prevMouseX = mouseX;
-    prevMouseY = mouseY;
+    // let mouse = MatrixVectorMultiply(webGLCoordinateMatrix, new Vec3(mouseX, mouseY,0));
+    let x = mouseX;
+    let y = -mouseY;
+    deltaMouseX = x - prevMouseX;
+    deltaMouseY = y - prevMouseY;
+    prevMouseX = x;
+    prevMouseY = y;
+    
     camera.rotation = MatrixMultiply(camera.rotation, YPR(0.008*deltaMouseY, 0.008*-deltaMouseX, 0));
 };
 
@@ -50,11 +54,11 @@ window.onkeypress = function(e)
 
     // ROTATE CCW
     if (e.key == 'q') {
-        camera.rotation = MatrixMultiply(camera.rotation, RotZ(-PI/90));
+        camera.rotation = MatrixMultiply(camera.rotation, RotZ(PI/90));
     }
     // ROTATE CW
     else if (e.key == 'e') {
-        camera.rotation = MatrixMultiply(camera.rotation, RotZ(PI/90));
+        camera.rotation = MatrixMultiply(camera.rotation, RotZ(-PI/90));
     }
     // Reset Camera
     else if (e.key == '0')
